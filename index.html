@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>İsim Şehir Hayvan</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="İsim Şehir">
+<meta name="theme-color" content="#eef3fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16302b" media="(prefers-color-scheme: dark)">
+<style>
+/* Düzen: tek sütun, telefon öncelikli. Aydınlık tema kareli defter, karanlık tema kara tahta. */
+:root{
+  --paper:#eef3fa; --grid:#d3deee; --card:#ffffff; --ink:#1b2a57; --soft:#5b6a94;
+  --line:#c3d0e6; --margin:#d8413a; --accent:#1f3a8a; --on-accent:#ffffff;
+  --good:#1d7a4f; --bad:#b3322c; --mark:#ffe27a; --mark-ink:#3d2f00;
+  --display:Georgia,"Times New Roman",serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#16302b; --grid:#1d3b35; --card:#1e3d37; --ink:#eef4ec; --soft:#a9c2b8;
+    --line:#35584f; --margin:#f08a7c; --accent:#f3e9a6; --on-accent:#16302b;
+    --good:#8fe0b0; --bad:#ff9d93; --mark:#f3e9a6; --mark-ink:#16302b;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font:16px/1.45 var(--body); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:22px 22px; -webkit-text-size-adjust:100%;
+}
+#app{
+  max-width:560px; margin:0 auto; min-height:100%;
+  padding-top:calc(14px + env(safe-area-inset-top,0px));
+  padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex; flex-direction:column; gap:14px;
+}
+h1,h2,h3,p{margin:0}
+h1{font:700 2.1rem/1.05 var(--display); letter-spacing:-.01em; text-wrap:balance}
+h2{font:700 1.05rem/1.2 var(--body)}
+.sub{color:var(--soft); font-size:.95rem}
+.card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px}
+.sheet{border-left:3px solid var(--margin)}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.grow{flex:1 1 0; min-width:0}
+label{font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
+.field{display:flex; flex-direction:column; gap:5px}
+input[type=text],select{
+  width:100%; font:inherit; font-size:1.05rem; color:var(--ink); background:var(--card);
+  border:1.5px solid var(--line); border-radius:8px; padding:11px 12px; min-height:48px;
+}
+input[type=text]:focus,select:focus,button:focus-visible{outline:3px solid var(--mark); outline-offset:1px; border-color:var(--accent)}
+input:disabled{opacity:.65}
+button{font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
+.btn{
+  min-height:50px; padding:12px 18px; border-radius:8px; border:1.5px solid var(--accent);
+  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:1.05rem; width:100%;
+}
+.btn.ghost{background:transparent; color:var(--accent)}
+.btn.small{min-height:40px; padding:8px 12px; font-size:.92rem; width:auto}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.top{display:flex; align-items:center; gap:10px; justify-content:space-between}
+.code{font:700 1.05rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.18em}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; padding:4px 9px; border-radius:99px; border:1px solid var(--line); color:var(--soft); background:var(--card)}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--good)}
+.dot.off{background:var(--bad)}
+.bigcode{font:700 2.6rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.2em; text-align:center}
+.qr{align-self:center; background:#fff; padding:10px; border-radius:8px; line-height:0}
+.qr svg{width:170px; height:170px; display:block}
+.players{display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0}
+.players li{padding:6px 11px; border-radius:99px; border:1px solid var(--line); background:var(--paper); font-weight:600; font-size:.95rem; display:flex; gap:6px; align-items:center; max-width:100%; overflow-wrap:anywhere}
+.players li.off{opacity:.5}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{min-height:40px; padding:7px 13px; border-radius:99px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:600}
+.chip[aria-pressed=true]{background:var(--mark); color:var(--mark-ink); border-color:var(--mark)}
+.letterbox{display:flex; align-items:center; gap:16px}
+.letter{
+  width:104px; height:104px; flex:none; border-radius:10px; background:var(--mark); color:var(--mark-ink);
+  font:700 4.4rem/104px var(--display); text-align:center; transform:rotate(-3deg);
+}
+.timer{font:700 2.3rem/1 var(--body); font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.banner{background:var(--mark); color:var(--mark-ink); border-radius:8px; padding:10px 12px; font-weight:700; text-align:center}
+.err{color:var(--bad); font-weight:600}
+table{width:100%; border-collapse:collapse}
+td,th{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; overflow-wrap:anywhere}
+th{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
+td.pts,th.pts{text-align:right; font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap; width:3.2em}
+td.who{width:34%; font-weight:600}
+tr.zero .ans{text-decoration:line-through; color:var(--soft)}
+tr.zero .pts{color:var(--bad)}
+tr.full .pts{color:var(--good)}
+.x{min-width:40px; min-height:40px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:700}
+td.act{width:48px; text-align:right}
+.rank td:first-child{width:2.2em; font-weight:700; color:var(--soft)}
+.rank tr.me td{background:color-mix(in srgb,var(--mark) 35%,transparent)}
+.center{text-align:center}
+@media (prefers-reduced-motion:no-preference){ .letter{animation:pop .35s ease-out} @keyframes pop{from{transform:rotate(8deg) scale(.6)}to{transform:rotate(-3deg) scale(1)}} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+"use strict";
+/* ---------- sabitler ve yardımcılar ---------- */
+const LETTERS=[..."ABCÇDEFGHIİKLMNOÖPRSŞTUÜVYZ"];
+const BASE_CATS=["İsim","Şehir","Hayvan","Bitki","Eşya","Ülke","Ünlü","Meslek","Yemek","Film / Dizi","Marka"];
+const DEFAULT_CATS=["İsim","Şehir","Hayvan","Bitki","Eşya","Ülke"];
+const QS=new URLSearchParams(location.search);
+const NS="ish"+(QS.get("p")?"-"+QS.get("p"):"")+"-";   // ?p=2 : aynı cihazda ikinci oyuncu denemek için
+const ls={
+  get(k,d){try{const v=localStorage.getItem(NS+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(NS+k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(NS+k)}catch(e){}}
+};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>String(s||"").trim().toLocaleLowerCase("tr").replace(/\s+/g," ");
+const rid=n=>{let s="";const a="ABCDEFGHJKLMNPRSTUVYZ23456789";for(let i=0;i<n;i++)s+=a[Math.floor(Math.random()*a.length)];return s};
+const hostPeerId=code=>"isim-sehir-hayvan-oda-"+code;
+let myId=ls.get("pid");
+if(!myId){myId="p"+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ls.set("pid",myId)}
+
+/* ---------- puanlama (saf fonksiyon) ----------
+   Boş ya da yanlış harfle başlayan: 0. Başkasıyla aynı cevap: 5. Benzersiz cevap: 10. */
+function scoreRound(s){
+  const cells={},per={},L=norm(s.letter);
+  for(const p of s.players){cells[p.id]={};per[p.id]=0}
+  for(const cat of s.settings.cats){
+    const count={};
+    for(const p of s.players){
+      const raw=((s.answers||{})[p.id]||{})[cat]||"",n=norm(raw);
+      let why="";
+      if(!n)why="boş";
+      else if(!n.startsWith(L))why="harf";
+      else if((s.invalid||{})[p.id+"|"+cat])why="geçersiz";
+      cells[p.id][cat]={raw:raw.trim(),n,why,pts:0};
+      if(!why)count[n]=(count[n]||0)+1;
+    }
+    for(const p of s.players){
+      const c=cells[p.id][cat];
+      if(!c.why){c.pts=count[c.n]>1?5:10;per[p.id]+=c.pts}
+    }
+  }
+  return {cells,per};
+}
+
+/* ---------- durum ---------- */
+let G=null;            // oda sahibindeki asıl oyun durumu
+let S=null;            // herkesin gördüğü durum
+let isHost=false, peer=null, hostConn=null, conns=new Map();
+let net="idle";        // idle | connecting | ok | re
+let everConnected=false, session=0, homeError="";
+let draft={}, draftKey="", deadlineLocal=0, sentStop=false;
+let lastHeard=0, clientRetry=null, lastPing=0, seen=new Map();
+
+function peerOpts(){
+  const o={debug:0};
+  const srv=QS.get("sunucu");            // isteğe bağlı: kendi PeerJS sunucun (ör. 192.168.1.20:9000)
+  if(srv){const [h,p]=srv.split(":");o.host=h;o.port=+(p||9000);o.path="/";o.secure=location.protocol==="https:"}
+  return o;
+}
+
+/* ---------- oda sahibi ---------- */
+function pub(){
+  const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,
+    round:g.round,letter:g.letter,stopper:g.stopper,
+    remaining:g.phase==="play"?Math.max(0,g.deadline-Date.now()):0};
+  if(g.phase==="review"||g.phase==="final"){s.answers=g.answers;s.invalid=g.invalid}
+  return s;
+}
+function sync(){
+  ls.set("host",Object.assign({},G,{saved:Date.now()}));
+  const s=pub();
+  for(const c of conns.values()){ if(c.open){try{c.send({t:"state",s})}catch(e){}} }
+  apply(s);
+}
+function hostHandle(m,pid){
+  if(!G)return;
+  if(m.t==="join"){
+    const name=String(m.name||"Oyuncu").slice(0,20);
+    let p=G.players.find(x=>x.id===pid);
+    if(p){p.name=name;p.online=true}else G.players.push({id:pid,name,score:0,online:true});
+    sync();
+  }else if(m.t==="draft"){
+    if((G.phase==="play"||G.phase==="collect")&&m.round===G.round&&m.answers&&typeof m.answers==="object"){
+      const a={};for(const c of G.settings.cats)a[c]=String(m.answers[c]||"").slice(0,40);
+      G.answers[pid]=a; ls.set("host",Object.assign({},G,{saved:Date.now()}));
+    }
+  }else if(m.t==="stop"){
+    if(G.phase==="play"&&m.round===G.round){G.stopper=pid;endRound()}
+  }else if(m.t==="leave"){
+    const p=G.players.find(x=>x.id===pid); if(p){p.online=false; if(G.phase==="lobby")G.players=G.players.filter(x=>x.id!==pid); sync()}
+  }
+}
+function startRound(){
+  if(!G.settings.cats.length)return;
+  let pool=LETTERS.filter(l=>!G.used.includes(l)); if(!pool.length){G.used=[];pool=LETTERS}
+  G.letter=pool[Math.floor(Math.random()*pool.length)]; G.used.push(G.letter);
+  G.round++; G.answers={}; G.invalid={}; G.stopper=null; G.phase="play";
+  G.deadline=Date.now()+G.settings.secs*1000;
+  sync();
+}
+function endRound(){
+  if(!G||G.phase!=="play")return;
+  G.phase="collect"; G.collectAt=Date.now(); sync();   // herkes son cevaplarını yollar
+}
+function commitRound(){
+  const sc=scoreRound(pub());
+  for(const p of G.players)p.score+=sc.per[p.id]||0;
+  if(G.round>=G.settings.rounds){G.phase="final";sync()}else startRound();
+}
+function newGame(){
+  for(const p of G.players)p.score=0;
+  G.players=G.players.filter(p=>p.online||p.id===G.hostId);
+  G.round=0;G.used=[];G.answers={};G.invalid={};G.letter="";G.phase="lobby";sync();
+}
+function openHost(resume){
+  const my=++session; isHost=true; net="connecting"; render();
+  peer=new Peer(hostPeerId(G.code),peerOpts());
+  peer.on("open",()=>{if(my!==session)return;net="ok";everConnected=true;sync()});
+  peer.on("connection",c=>{
+    let pid=null;
+    c.on("data",m=>{
+      if(my!==session||!m||typeof m!=="object")return;
+      if(m.t==="join"&&typeof m.pid==="string"){
+        pid=m.pid.slice(0,40);
+        const old=conns.get(pid); if(old&&old!==c){try{old.close()}catch(e){}}
+        conns.set(pid,c);
+      }
+      if(pid){seen.set(pid,Date.now());hostHandle(m,pid)}
+    });
+    c.on("close",()=>{
+      if(my!==session||!pid||conns.get(pid)!==c)return;
+      conns.delete(pid);
+      const p=G&&G.players.find(x=>x.id===pid); if(p){p.online=false;sync()}
+    });
+  });
+  peer.on("disconnected",()=>{
+    if(my!==session)return; net="re"; render();
+    setTimeout(()=>{if(my===session&&peer&&!peer.destroyed){try{peer.reconnect()}catch(e){}}},1500);
+  });
+  peer.on("error",e=>{
+    if(my!==session)return;
+    if(e.type==="unavailable-id"){
+      if(resume){leave("Bu oda başka bir cihazda açık görünüyor.")}
+      else{try{peer.destroy()}catch(x){} G.code=rid(4); openHost(false)}
+    }else if(!everConnected){leave("Sunucuya bağlanılamadı. İnternetini kontrol edip tekrar dene.")}
+  });
+}
+function createRoom(name){
+  G={code:rid(4),phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
+     settings:ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:5}),
+     round:0,letter:"",used:[],answers:{},invalid:{},stopper:null,deadline:0};
+  everConnected=false; openHost(false);
+}
+
+/* ---------- oyuncu ---------- */
+function joinRoom(code,name){
+  const my=++session; isHost=false; net=everConnected?"re":"connecting"; render();
+  ls.set("last",{code,name});
+  peer=new Peer(undefined,peerOpts());
+  let retried=false;
+  const retry=()=>{
+    if(my!==session||retried)return; retried=true;
+    try{peer.destroy()}catch(e){}
+    if(!everConnected){leave("Oda bulunamadı. Kodu kontrol et; oda sahibinin ekranı açık olmalı.");return}
+    net="re"; render(); setTimeout(()=>{if(my===session)joinRoom(code,name)},2000);
+  };
+  peer.on("open",()=>{
+    if(my!==session)return;
+    const c=peer.connect(hostPeerId(code),{reliable:true,serialization:"json"}); hostConn=c;
+    let got=false;
+    const hello=()=>{if(my!==session||got||!c.open)return; c.send({t:"join",pid:myId,name}); setTimeout(hello,3000)};
+    c.on("open",()=>{if(my!==session)return; hello(); if(S)sendDraft()});
+    c.on("data",m=>{if(my!==session||!m)return; lastHeard=Date.now(); if(m.t==="state"){got=true;net="ok";everConnected=true;apply(m.s)}else if(m.t==="ping"){try{c.send({t:"pong"})}catch(e){}}});
+    clientRetry=retry; lastHeard=Date.now();
+    c.on("close",retry); c.on("error",retry);
+    setTimeout(()=>{if(my===session&&!c.open)retry()},12000);
+  });
+  peer.on("error",retry);
+  peer.on("disconnected",()=>{ if(my===session&&peer&&!peer.destroyed&&hostConn&&hostConn.open){try{peer.reconnect()}catch(e){}} });
+}
+function leave(msg){
+  session++;
+  if(!isHost&&hostConn&&hostConn.open){try{hostConn.send({t:"leave"})}catch(e){}}
+  try{peer&&peer.destroy()}catch(e){}
+  peer=null;hostConn=null;conns=new Map();
+  if(isHost&&!msg)ls.del("host");
+  G=null;S=null;isHost=false;net="idle";everConnected=false;homeError=msg||"";
+  if(location.search.includes("oda=")){try{history.replaceState(null,"",location.pathname+(QS.get("p")?"?p="+QS.get("p"):""))}catch(e){}}
+  render();
+}
+function send(m){
+  if(isHost)hostHandle(m,myId);
+  else if(hostConn&&hostConn.open){try{hostConn.send(m)}catch(e){}}
+}
+function sendDraft(){ if(S&&(S.phase==="play"||S.phase==="collect"))send({t:"draft",round:S.round,answers:draft}) }
+let draftTimer=0;
+function queueDraft(){ ls.set("draft",{key:draftKey,draft}); clearTimeout(draftTimer); draftTimer=setTimeout(sendDraft,500) }
+
+function apply(s){
+  const prevPhase=S&&S.phase, prevRound=S&&S.round;
+  S=s; deadlineLocal=Date.now()+(s.remaining||0);
+  const key=s.code+"#"+s.round;
+  if(key!==draftKey){
+    draftKey=key; sentStop=false;
+    const saved=ls.get("draft",null); draft=saved&&saved.key===key?saved.draft:{};
+  }
+  if(s.phase==="collect"&&(prevPhase!=="collect"||prevRound!==s.round)){clearTimeout(draftTimer);sendDraft()}
+  render();
+}
+
+/* ---------- arayüz ---------- */
+const app=document.getElementById("app");
+let lastHTML="";
+function me(){return S&&S.players.find(p=>p.id===myId)}
+function nameOf(id){const p=S.players.find(x=>x.id===id);return p?p.name:"Biri"}
+function joinLink(){return location.origin+location.pathname+"?oda="+S.code}
+
+function viewHome(){
+  const last=ls.get("last",{}), saved=ls.get("host",null), urlCode=(QS.get("oda")||"").toUpperCase();
+  const canResume=saved&&saved.hostId===myId&&Date.now()-saved.saved<3*3600e3;
+  return `
+  <header><h1>İsim Şehir Hayvan</h1><p class="sub">Herkes kendi telefonundan oynar. Bir kişi oda açar, diğerleri kodla ya da QR ile katılır.</p></header>
+  ${homeError?`<p class="err" role="alert">${esc(homeError)}</p>`:""}
+  ${typeof Peer==="undefined"?`<p class="err" role="alert">Bağlantı kütüphanesi yüklenemedi. İnterneti kontrol edip sayfayı yenile.</p>`:""}
+  <section class="card sheet">
+    <div class="field"><label for="name">Adın</label><input type="text" id="name" maxlength="20" autocomplete="nickname" value="${esc(ls.get("name",last.name||""))}" placeholder="Örn. Burak"></div>
+    ${urlCode?"":`<button class="btn" data-act="create">Oda aç</button>`}
+    ${canResume&&!urlCode?`<button class="btn ghost" data-act="resume">Açık odana dön (${esc(saved.code)})</button>`:""}
+  </section>
+  <section class="card">
+    <div class="field"><label for="code">Oda kodu</label><input type="text" id="code" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" value="${esc(urlCode||"")}" placeholder="4 harfli kod" style="letter-spacing:.2em;text-transform:uppercase"></div>
+    <button class="btn ${urlCode?"":"ghost"}" data-act="join">Odaya katıl</button>
+  </section>`;
+}
+function topBar(){
+  return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>
+  <span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
+  <button class="btn ghost small" data-act="leave">${isHost?"Odayı kapat":"Çık"}</button></div>
+  ${net!=="ok"?`<div class="banner" role="status">Bağlantı koptu, yeniden bağlanılıyor…</div>`:""}`;
+}
+function playerList(){
+  return `<ul class="players">${S.players.map(p=>`<li class="${p.online?"":"off"}">${esc(p.name)}${p.id===S.hostId?" ★":""}${p.id===myId?" (sen)":""}</li>`).join("")}</ul>`;
+}
+function qrSvg(){
+  try{ if(typeof qrcode!=="function")return ""; const q=qrcode(0,"M"); q.addData(joinLink()); q.make();
+    return `<div class="qr" aria-label="Katılma QR kodu">${q.createSvgTag({cellSize:4,margin:0,scalable:true})}</div>`}catch(e){return ""}
+}
+function viewLobby(){
+  const st=S.settings, cats=BASE_CATS.concat(st.cats.filter(c=>!BASE_CATS.includes(c)));
+  const settings=isHost?`
+    <section class="card">
+      <h2>Kategoriler</h2>
+      <div class="chips">${cats.map(c=>`<button class="chip" data-act="cat" data-cat="${esc(c)}" aria-pressed="${st.cats.includes(c)}">${esc(c)}</button>`).join("")}</div>
+      <div class="row"><div class="grow"><input type="text" id="newcat" maxlength="18" placeholder="Kendi kategorin"></div><button class="btn ghost small" data-act="addcat">Ekle</button></div>
+      <div class="row">
+        <div class="field grow"><label for="secs">Süre</label><select id="secs">${[45,60,90,120,180].map(v=>`<option value="${v}" ${v===st.secs?"selected":""}>${v} saniye</option>`).join("")}</select></div>
+        <div class="field grow"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10,15].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
+      </div>
+    </section>
+    <button class="btn" data-act="start" ${st.cats.length?"":"disabled"}>Oyunu başlat</button>`
+  :`<section class="card"><h2>Oyun ayarları</h2><p>${esc(st.cats.join(", "))}</p><p class="sub">${st.secs} saniye · ${st.rounds} tur</p></section>
+    <p class="sub center">Oda sahibinin oyunu başlatması bekleniyor…</p>`;
+  return topBar()+`
+  <section class="card sheet">
+    <p class="sub center">Arkadaşların bu kodla katılsın</p>
+    <div class="bigcode">${esc(S.code)}</div>
+    ${qrSvg()}
+    <button class="btn ghost" data-act="share">Katılma linkini paylaş</button>
+    <p class="sub center" id="sharemsg" hidden></p>
+  </section>
+  <section class="card"><h2>Oyuncular (${S.players.length})</h2>${playerList()}</section>
+  ${settings}`;
+}
+function viewPlay(){
+  const stopped=S.phase==="collect";
+  return topBar()+`
+  <section class="card sheet">
+    <div class="letterbox">
+      <div class="letter" aria-label="Harf ${esc(S.letter)}">${esc(S.letter)}</div>
+      <div><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p><div class="timer" id="timer" aria-live="off">–</div></div>
+    </div>
+    ${stopped?`<div class="banner" role="status">${S.stopper?esc(nameOf(S.stopper))+" bitirdi!":"Süre doldu!"} Cevaplar toplanıyor…</div>`:""}
+  </section>
+  <section class="card" id="answers">
+    ${S.settings.cats.map((c,i)=>`<div class="field"><label for="a${i}">${esc(c)}</label><input type="text" id="a${i}" data-cat="${esc(c)}" maxlength="40" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="${esc(S.letter)}…" ${stopped?"disabled":""}></div>`).join("")}
+  </section>
+  ${stopped?"":`<button class="btn" id="stopbtn" data-act="stop">Bitirdim!</button><p class="sub center">Bütün kutuları doldurunca turu herkes için bitirebilirsin.</p>`}`;
+}
+function viewReview(){
+  const sc=scoreRound(S), final=S.round>=S.settings.rounds;
+  const why={boş:"boş",harf:"yanlış harf",geçersiz:"geçersiz"};
+  const cats=S.settings.cats.map(cat=>`
+    <section class="card"><h2>${esc(cat)}</h2>
+    <table><tbody>${S.players.map(p=>{
+      const c=sc.cells[p.id][cat], canToggle=isHost&&c.why!=="boş"&&c.why!=="harf";
+      return `<tr class="${c.pts===0?"zero":c.pts===10?"full":""}"><td class="who">${esc(p.name)}</td>
+        <td><span class="ans">${c.raw?esc(c.raw):"—"}</span>${c.why&&c.why!=="boş"?` <span class="sub">(${why[c.why]})</span>`:""}</td>
+        <td class="pts">${c.pts}</td>
+        ${isHost?`<td class="act">${canToggle?`<button class="x" data-act="inv" data-pid="${esc(p.id)}" data-cat="${esc(cat)}" aria-label="${c.why?"Cevabı geri al":"Cevabı geçersiz say"}">${c.why?"↺":"✕"}</button>`:""}</td>`:""}</tr>`}).join("")}
+    </tbody></table></section>`).join("");
+  const board=S.players.map(p=>({p,r:sc.per[p.id]||0,t:p.score+(sc.per[p.id]||0)})).sort((a,b)=>b.t-a.t);
+  return topBar()+`
+  <section class="card sheet"><div class="letterbox"><div class="letter">${esc(S.letter)}</div>
+    <div><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p><h2>Cevaplar</h2><p class="sub">Aynı cevap 5, farklı cevap 10 puan.${isHost?" Kabul etmediğin cevabı ✕ ile sil.":""}</p></div></div></section>
+  ${cats}
+  <section class="card"><h2>Puan durumu</h2>
+    <table class="rank"><thead><tr><th></th><th>Oyuncu</th><th class="pts">Tur</th><th class="pts">Toplam</th></tr></thead>
+    <tbody>${board.map((b,i)=>`<tr class="${b.p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(b.p.name)}</td><td class="pts">+${b.r}</td><td class="pts">${b.t}</td></tr>`).join("")}</tbody></table>
+  </section>
+  ${isHost?`<button class="btn" data-act="next">${final?"Sonuçları göster":"Sonraki tur"}</button>`:`<p class="sub center">Oda sahibi cevapları kontrol ediyor…</p>`}`;
+}
+function viewFinal(){
+  const board=S.players.slice().sort((a,b)=>b.score-a.score), top=board[0];
+  return topBar()+`
+  <section class="card sheet center"><p class="sub">Oyun bitti</p><h1>${top?esc(top.name):""} kazandı</h1><p class="sub">${top?top.score:0} puan</p></section>
+  <section class="card"><h2>Sıralama</h2>
+    <table class="rank"><tbody>${board.map((p,i)=>`<tr class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
+  </section>
+  ${isHost?`<button class="btn" data-act="again">Yeni oyun</button>`:`<p class="sub center">Oda sahibi yeni oyun başlatabilir.</p>`}`;
+}
+function render(){
+  let html;
+  if(!S){
+    html=net==="connecting"||net==="re"
+      ?`<header><h1>İsim Şehir Hayvan</h1></header><section class="card center"><p>Odaya bağlanılıyor…</p><button class="btn ghost" data-act="leave">Vazgeç</button></section>`
+      :viewHome();
+  }else if(S.phase==="lobby")html=viewLobby();
+  else if(S.phase==="play"||S.phase==="collect")html=viewPlay();
+  else if(S.phase==="review")html=viewReview();
+  else html=viewFinal();
+  if(html!==lastHTML){
+    // yazı yazılan alanları koru: aynı ekranda odak ve değerleri geri yükle
+    const act=document.activeElement, keep=act&&act.id?{id:act.id,v:act.value,s:act.selectionStart}:null;
+    const vals={};for(const el of app.querySelectorAll("input[type=text]"))if(el.id)vals[el.id]=el.value;
+    const samePhase=app.dataset.screen===(S?S.phase+"#"+S.round:"home");
+    app.innerHTML=html; lastHTML=html; app.dataset.screen=S?S.phase+"#"+S.round:"home";
+    if(S&&(S.phase==="play"||S.phase==="collect")){
+      for(const el of app.querySelectorAll("#answers input"))el.value=draft[el.dataset.cat]||"";
+    }else if(samePhase){
+      for(const id in vals){const el=document.getElementById(id);if(el&&!el.dataset.cat)el.value=vals[id]}
+    }
+    if(keep){const el=document.getElementById(keep.id);if(el&&!el.disabled){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
+    if(!samePhase)window.scrollTo(0,0);
+  }
+  tick();
+}
+function tick(){
+  const now=Date.now();
+  if(isHost&&G&&now-lastPing>4000){
+    lastPing=now; let changed=false;
+    for(const [pid,c] of conns){
+      if(c.open){try{c.send({t:"ping"})}catch(e){}}
+      const p=G.players.find(x=>x.id===pid);
+      if(p&&p.online&&now-(seen.get(pid)||now)>15000){p.online=false;changed=true}
+    }
+    if(changed)sync();
+  }
+  if(!isHost&&S&&net==="ok"&&clientRetry&&document.visibilityState==="visible"&&now-lastHeard>13000){lastHeard=now;clientRetry()}
+  if(isHost&&G){
+    if(G.phase==="play"&&Date.now()>=G.deadline)endRound();
+    else if(G.phase==="collect"&&Date.now()-G.collectAt>=1500){G.phase="review";sync()}
+  }
+  if(!S||S.phase!=="play"&&S.phase!=="collect")return;
+  const t=document.getElementById("timer");
+  if(t){
+    const left=S.phase==="collect"?0:Math.max(0,Math.ceil((deadlineLocal-Date.now())/1000));
+    const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+    if(t.textContent!==txt)t.textContent=txt;
+    t.classList.toggle("low",left<=10);
+  }
+  const b=document.getElementById("stopbtn");
+  if(b)b.disabled=sentStop||!S.settings.cats.every(c=>norm(draft[c]));
+}
+setInterval(tick,250);
+
+/* ---------- olaylar ---------- */
+function readName(){
+  const el=document.getElementById("name"), n=(el?el.value:"").trim().slice(0,20);
+  if(!n){homeError="Önce adını yaz.";render();const e=document.getElementById("name");e&&e.focus();return null}
+  ls.set("name",n);homeError="";return n;
+}
+function setSettings(){ls.set("settings",G.settings);sync()}
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-act]"); if(!b||b.disabled)return;
+  const a=b.dataset.act;
+  if(a==="create"){const n=readName();if(n)createRoom(n)}
+  else if(a==="join"){
+    const n=readName();if(!n)return;
+    const code=(document.getElementById("code").value||"").trim().toLocaleUpperCase("en").replace(/[^A-Z0-9]/g,"");
+    if(code.length!==4){homeError="Oda kodu 4 karakter olmalı.";render();return}
+    everConnected=false;joinRoom(code,n);
+  }
+  else if(a==="resume"){
+    const saved=ls.get("host",null);if(!saved)return;
+    G=saved;delete G.saved;G.players.forEach(p=>p.online=p.id===myId);everConnected=false;openHost(true);
+  }
+  else if(a==="leave")leave("");
+  else if(a==="share"){
+    const url=joinLink(),msg=document.getElementById("sharemsg");
+    const done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
+    if(navigator.share)navigator.share({title:"İsim Şehir Hayvan",text:"Odaya katıl: "+S.code,url}).catch(()=>{});
+    else if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>done("Link kopyalandı."),()=>done(url));
+    else done(url);
+  }
+  else if(a==="stop"){sentStop=true;clearTimeout(draftTimer);sendDraft();send({t:"stop",round:S.round});tick()}
+  else if(!isHost||!G)return;
+  else if(a==="cat"){const c=b.dataset.cat,i=G.settings.cats.indexOf(c);if(i>=0)G.settings.cats.splice(i,1);else G.settings.cats.push(c);setSettings()}
+  else if(a==="addcat"){
+    const el=document.getElementById("newcat"),c=el.value.trim().slice(0,18);
+    if(c&&!G.settings.cats.some(x=>norm(x)===norm(c))){G.settings.cats.push(c);el.value="";setSettings()}
+  }
+  else if(a==="start"){for(const p of G.players)p.score=0;G.round=0;G.used=[];startRound()}
+  else if(a==="inv"){const k=b.dataset.pid+"|"+b.dataset.cat;if(G.invalid[k])delete G.invalid[k];else G.invalid[k]=true;sync()}
+  else if(a==="next"){if(G.phase==="review")commitRound()}
+  else if(a==="again")newGame();
+});
+document.addEventListener("input",ev=>{
+  const el=ev.target;
+  if(el.dataset&&el.dataset.cat&&el.closest("#answers")){draft[el.dataset.cat]=el.value;queueDraft();tick()}
+});
+document.addEventListener("change",ev=>{
+  if(!isHost||!G)return;
+  if(ev.target.id==="secs"){G.settings.secs=+ev.target.value;setSettings()}
+  if(ev.target.id==="rounds"){G.settings.rounds=+ev.target.value;setSettings()}
+});
+document.addEventListener("keydown",ev=>{
+  if(ev.key!=="Enter")return;const el=ev.target;
+  if(el.id==="newcat"){ev.preventDefault();const b=document.querySelector('[data-act="addcat"]');b&&b.click()}
+  else if(el.id==="code"){ev.preventDefault();const b=document.querySelector('[data-act="join"]');b&&b.click()}
+  else if(el.dataset&&el.dataset.cat){ev.preventDefault();const all=[...document.querySelectorAll("#answers input")],n=all[all.indexOf(el)+1];if(n)n.focus();else el.blur()}
+});
+/* ekran kapanırsa bağlantı kopar: oyun sırasında ekranı açık tut */
+let wake=null;
+async function keepAwake(){try{if(S&&"wakeLock" in navigator&&document.visibilityState==="visible"&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibilityState==="visible"){tick();if(!isHost&&S)sendDraft()}});
+document.addEventListener("click",keepAwake);
+window.addEventListener("pagehide",()=>{if(!isHost&&hostConn&&hostConn.open){try{hostConn.send({t:"draft",round:S&&S.round,answers:draft})}catch(e){}}});
+
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+render();
+</script>
+</body>
+</html>
