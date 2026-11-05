@@ -1,6 +1,6 @@
-const CACHE="isim-sehir-v1";
+const CACHE="isim-sehir-v2";
 const FILES=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png"];
-const CDN=["https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js","https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"];
+const CDN=["https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js","https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"];
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(CACHE).then(async c=>{
     await c.addAll(FILES);

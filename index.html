@@ -110,7 +110,7 @@ td.act{width:48px; text-align:right}
 </head>
 <body>
 <div id="app"></div>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 "use strict";
@@ -128,7 +128,6 @@ const ls={
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm=s=>String(s||"").trim().toLocaleLowerCase("tr").replace(/\s+/g," ");
 const rid=n=>{let s="";const a="ABCDEFGHJKLMNPRSTUVYZ23456789";for(let i=0;i<n;i++)s+=a[Math.floor(Math.random()*a.length)];return s};
-const hostPeerId=code=>"isim-sehir-hayvan-oda-"+code;
 let myId=ls.get("pid");
 if(!myId){myId="p"+Math.random().toString(36).slice(2,10)+Date.now().toString(36);ls.set("pid",myId)}
 
@@ -159,31 +158,34 @@ function scoreRound(s){
 /* ---------- durum ---------- */
 let G=null;            // oda sahibindeki asıl oyun durumu
 let S=null;            // herkesin gördüğü durum
-let isHost=false, peer=null, hostConn=null, conns=new Map();
+let isHost=false, mq=null, roomCode="", myName="";
 let net="idle";        // idle | connecting | ok | re
 let everConnected=false, session=0, homeError="";
 let draft={}, draftKey="", deadlineLocal=0, sentStop=false;
-let lastHeard=0, clientRetry=null, lastPing=0, seen=new Map();
+let lastHeard=0, lastHello=0, lastPing=0, hostUpSince=0, seen=new Map();
 
-function peerOpts(){
-  const o={debug:0};
-  const srv=QS.get("sunucu");            // isteğe bağlı: kendi PeerJS sunucun (ör. 192.168.1.20:9000)
-  if(srv){const [h,p]=srv.split(":");o.host=h;o.port=+(p||9000);o.path="/";o.secure=location.protocol==="https:"}
-  return o;
-}
+/* Bağlantı: telefonlar birbirine doğrudan değil, herkese açık bir mesaj sunucusu (MQTT) üzerinden konuşur.
+   Oda kodunun son rakamı hangi sunucunun kullanıldığını söyler. */
+const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt","wss://test.mosquitto.org:8081/mqtt"];
+const topic=(code,k)=>"isimsehirhayvan/v2/"+code+"/"+k;
+const brokerOf=code=>BROKERS[(+code[4]||1)-1]||BROKERS[0];
+const dec=p=>typeof p==="string"?p:new TextDecoder().decode(p);
+function mqConnect(url){return mqtt.connect(url,{clientId:"ish_"+rid(12),clean:true,keepalive:10,reconnectPeriod:2000,connectTimeout:8000})}
+function pubMsg(k,m,qos){ if(mq&&mq.connected&&roomCode){try{mq.publish(topic(roomCode,k),JSON.stringify(m),{qos:qos||0})}catch(e){}} }
 
 /* ---------- oda sahibi ---------- */
 function pub(){
   const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,
-    round:g.round,letter:g.letter,stopper:g.stopper,
+    round:g.round,letter:g.letter,stopper:g.stopper,v:g.v||0,
     remaining:g.phase==="play"?Math.max(0,g.deadline-Date.now()):0};
   if(g.phase==="review"||g.phase==="final"){s.answers=g.answers;s.invalid=g.invalid}
   return s;
 }
 function sync(){
+  G.v=(G.v||0)+1;
   ls.set("host",Object.assign({},G,{saved:Date.now()}));
   const s=pub();
-  for(const c of conns.values()){ if(c.open){try{c.send({t:"state",s})}catch(e){}} }
+  pubMsg("st",{t:"state",s},1);
   apply(s);
 }
 function hostHandle(m,pid){
@@ -226,77 +228,85 @@ function newGame(){
   G.players=G.players.filter(p=>p.online||p.id===G.hostId);
   G.round=0;G.used=[];G.answers={};G.invalid={};G.letter="";G.phase="lobby";sync();
 }
-function openHost(resume){
+function openHost(resume,idx){
   const my=++session; isHost=true; net="connecting"; render();
-  peer=new Peer(hostPeerId(G.code),peerOpts());
-  peer.on("open",()=>{if(my!==session)return;net="ok";everConnected=true;sync()});
-  peer.on("connection",c=>{
-    let pid=null;
-    c.on("data",m=>{
-      if(my!==session||!m||typeof m!=="object")return;
-      if(m.t==="join"&&typeof m.pid==="string"){
-        pid=m.pid.slice(0,40);
-        const old=conns.get(pid); if(old&&old!==c){try{old.close()}catch(e){}}
-        conns.set(pid,c);
-      }
-      if(pid){seen.set(pid,Date.now());hostHandle(m,pid)}
-    });
-    c.on("close",()=>{
-      if(my!==session||!pid||conns.get(pid)!==c)return;
-      conns.delete(pid);
-      const p=G&&G.players.find(x=>x.id===pid); if(p){p.online=false;sync()}
-    });
+  if(!resume){
+    idx=idx||0;
+    if(idx>=BROKERS.length){leave("Oyun sunucusuna bağlanılamadı. İnternetini kontrol edip tekrar dene.");return}
+    G.code=G.code.slice(0,4)+(idx+1);
+  }
+  roomCode=G.code;
+  const c=mq=mqConnect(brokerOf(G.code));
+  const giveUp=setTimeout(()=>{
+    if(my!==session||everConnected)return;
+    try{c.end(true)}catch(e){}
+    if(resume)leave("Oyun sunucusuna bağlanılamadı. İnternetini kontrol edip tekrar dene.");else openHost(false,idx+1);
+  },8000);
+  c.on("connect",()=>{
+    if(my!==session)return; clearTimeout(giveUp); everConnected=true; net="ok"; hostUpSince=Date.now();
+    c.subscribe(topic(G.code,"in"),{qos:1},()=>{if(my===session)sync()});
   });
-  peer.on("disconnected",()=>{
-    if(my!==session)return; net="re"; render();
-    setTimeout(()=>{if(my===session&&peer&&!peer.destroyed){try{peer.reconnect()}catch(e){}}},1500);
-  });
-  peer.on("error",e=>{
-    if(my!==session)return;
-    if(e.type==="unavailable-id"){
-      if(resume){leave("Bu oda başka bir cihazda açık görünüyor.")}
-      else{try{peer.destroy()}catch(x){} G.code=rid(4); openHost(false)}
-    }else if(!everConnected){leave("Sunucuya bağlanılamadı. İnternetini kontrol edip tekrar dene.")}
+  c.on("close",()=>{if(my!==session||!everConnected)return; net="re"; render()});
+  c.on("error",()=>{});
+  c.on("message",(t,p)=>{
+    if(my!==session||!G)return;
+    let m; try{m=JSON.parse(dec(p))}catch(e){return}
+    if(!m||typeof m.pid!=="string"||m.pid===myId)return;
+    const pid=m.pid.slice(0,40); seen.set(pid,Date.now());
+    const pl=G.players.find(x=>x.id===pid), back=pl&&!pl.online&&m.t!=="leave"&&m.t!=="join";
+    if(back)pl.online=true;
+    hostHandle(m,pid);
+    if(back)sync();
   });
 }
 function createRoom(name){
-  G={code:rid(4),phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
+  G={code:rid(4)+"1",phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
      settings:ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:5}),
-     round:0,letter:"",used:[],answers:{},invalid:{},stopper:null,deadline:0};
-  everConnected=false; openHost(false);
+     round:0,letter:"",used:[],answers:{},invalid:{},stopper:null,deadline:0,v:0};
+  everConnected=false; openHost(false,0);
 }
 
 /* ---------- oyuncu ---------- */
+function hello(){lastHello=Date.now(); pubMsg("in",{t:"join",pid:myId,name:myName},1)}
 function joinRoom(code,name){
-  const my=++session; isHost=false; net=everConnected?"re":"connecting"; render();
+  const my=++session; isHost=false; net="connecting"; roomCode=code; myName=name; everConnected=false; render();
   ls.set("last",{code,name});
-  peer=new Peer(undefined,peerOpts());
-  let retried=false;
-  const retry=()=>{
-    if(my!==session||retried)return; retried=true;
-    try{peer.destroy()}catch(e){}
-    if(!everConnected){leave("Oda bulunamadı. Kodu kontrol et; oda sahibinin ekranı açık olmalı.");return}
-    net="re"; render(); setTimeout(()=>{if(my===session)joinRoom(code,name)},2000);
-  };
-  peer.on("open",()=>{
-    if(my!==session)return;
-    const c=peer.connect(hostPeerId(code),{reliable:true,serialization:"json"}); hostConn=c;
-    let got=false;
-    const hello=()=>{if(my!==session||got||!c.open)return; c.send({t:"join",pid:myId,name}); setTimeout(hello,3000)};
-    c.on("open",()=>{if(my!==session)return; hello(); if(S)sendDraft()});
-    c.on("data",m=>{if(my!==session||!m)return; lastHeard=Date.now(); if(m.t==="state"){got=true;net="ok";everConnected=true;apply(m.s)}else if(m.t==="ping"){try{c.send({t:"pong"})}catch(e){}}});
-    clientRetry=retry; lastHeard=Date.now();
-    c.on("close",retry); c.on("error",retry);
-    setTimeout(()=>{if(my===session&&!c.open)retry()},12000);
+  const c=mq=mqConnect(brokerOf(code));
+  let up=false;
+  setTimeout(()=>{
+    if(my!==session||S)return;
+    leave(up?"Oda bulunamadı. Kodu kontrol et; oda sahibinin oyun ekranı açık olmalı.":"Oyun sunucusuna bağlanılamadı. İnternetini kontrol edip tekrar dene.");
+  },12000);
+  c.on("connect",()=>{
+    if(my!==session)return; up=true;
+    c.subscribe(topic(code,"st"),{qos:1},()=>{if(my===session){hello(); if(S)sendDraft()}});
   });
-  peer.on("error",retry);
-  peer.on("disconnected",()=>{ if(my===session&&peer&&!peer.destroyed&&hostConn&&hostConn.open){try{peer.reconnect()}catch(e){}} });
+  c.on("error",()=>{});
+  c.on("message",(t,p)=>{
+    if(my!==session)return;
+    let m; try{m=JSON.parse(dec(p))}catch(e){return}
+    if(!m)return;
+    if(m.t==="closed"){leave("Oda sahibi odayı kapattı.");return}
+    lastHeard=Date.now();
+    if(m.t==="ping"){ if(S)pubMsg("in",{t:"pong",pid:myId}); return }
+    if(m.t==="state"&&m.s&&Array.isArray(m.s.players)){
+      if(!m.s.players.some(x=>x.id===myId)){ if(Date.now()-lastHello>2500)hello(); return }
+      if(S&&m.s.v<S.v&&S.v-m.s.v<20)return;       // geciken eski mesaj
+      everConnected=true; apply(m.s);
+    }
+  });
 }
 function leave(msg){
   session++;
-  if(!isHost&&hostConn&&hostConn.open){try{hostConn.send({t:"leave"})}catch(e){}}
-  try{peer&&peer.destroy()}catch(e){}
-  peer=null;hostConn=null;conns=new Map();
+  const c=mq;
+  if(c){try{
+    if(c.connected&&roomCode){
+      if(isHost){ if(!msg)c.publish(topic(roomCode,"st"),JSON.stringify({t:"closed"})) }
+      else if(S)c.publish(topic(roomCode,"in"),JSON.stringify({t:"leave",pid:myId}));
+    }
+    c.end();
+  }catch(e){}}
+  mq=null; roomCode="";
   if(isHost&&!msg)ls.del("host");
   G=null;S=null;isHost=false;net="idle";everConnected=false;homeError=msg||"";
   if(location.search.includes("oda=")){try{history.replaceState(null,"",location.pathname+(QS.get("p")?"?p="+QS.get("p"):""))}catch(e){}}
@@ -304,7 +314,7 @@ function leave(msg){
 }
 function send(m){
   if(isHost)hostHandle(m,myId);
-  else if(hostConn&&hostConn.open){try{hostConn.send(m)}catch(e){}}
+  else pubMsg("in",Object.assign({pid:myId},m),1);
 }
 function sendDraft(){ if(S&&(S.phase==="play"||S.phase==="collect"))send({t:"draft",round:S.round,answers:draft}) }
 let draftTimer=0;
@@ -331,18 +341,18 @@ function joinLink(){return location.origin+location.pathname+"?oda="+S.code}
 
 function viewHome(){
   const last=ls.get("last",{}), saved=ls.get("host",null), urlCode=(QS.get("oda")||"").toUpperCase();
-  const canResume=saved&&saved.hostId===myId&&Date.now()-saved.saved<3*3600e3;
+  const canResume=saved&&saved.hostId===myId&&/^[A-Z0-9]{4}[1-3]$/.test(saved.code||"")&&Date.now()-saved.saved<3*3600e3;
   return `
   <header><h1>İsim Şehir Hayvan</h1><p class="sub">Herkes kendi telefonundan oynar. Bir kişi oda açar, diğerleri kodla ya da QR ile katılır.</p></header>
   ${homeError?`<p class="err" role="alert">${esc(homeError)}</p>`:""}
-  ${typeof Peer==="undefined"?`<p class="err" role="alert">Bağlantı kütüphanesi yüklenemedi. İnterneti kontrol edip sayfayı yenile.</p>`:""}
+  ${typeof mqtt==="undefined"?`<p class="err" role="alert">Bağlantı kütüphanesi yüklenemedi. İnterneti kontrol edip sayfayı yenile.</p>`:""}
   <section class="card sheet">
     <div class="field"><label for="name">Adın</label><input type="text" id="name" maxlength="20" autocomplete="nickname" value="${esc(ls.get("name",last.name||""))}" placeholder="Örn. Burak"></div>
     ${urlCode?"":`<button class="btn" data-act="create">Oda aç</button>`}
     ${canResume&&!urlCode?`<button class="btn ghost" data-act="resume">Açık odana dön (${esc(saved.code)})</button>`:""}
   </section>
   <section class="card">
-    <div class="field"><label for="code">Oda kodu</label><input type="text" id="code" maxlength="4" autocapitalize="characters" autocomplete="off" spellcheck="false" value="${esc(urlCode||"")}" placeholder="4 harfli kod" style="letter-spacing:.2em;text-transform:uppercase"></div>
+    <div class="field"><label for="code">Oda kodu</label><input type="text" id="code" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" value="${esc(urlCode||"")}" placeholder="5 karakterli kod" style="letter-spacing:.2em;text-transform:uppercase"></div>
     <button class="btn ${urlCode?"":"ghost"}" data-act="join">Odaya katıl</button>
   </section>`;
 }
@@ -350,7 +360,7 @@ function topBar(){
   return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>
   <span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
   <button class="btn ghost small" data-act="leave">${isHost?"Odayı kapat":"Çık"}</button></div>
-  ${net!=="ok"?`<div class="banner" role="status">Bağlantı koptu, yeniden bağlanılıyor…</div>`:""}`;
+  ${net!=="ok"?`<div class="banner" role="status">${isHost||!mq||!mq.connected?"Bağlantı koptu, yeniden bağlanılıyor…":"Oda sahibine ulaşılamıyor. Onun oyun ekranı açık olmalı."}</div>`:""}`;
 }
 function playerList(){
   return `<ul class="players">${S.players.map(p=>`<li class="${p.online?"":"off"}">${esc(p.name)}${p.id===S.hostId?" ★":""}${p.id===myId?" (sen)":""}</li>`).join("")}</ul>`;
@@ -460,16 +470,22 @@ function render(){
 }
 function tick(){
   const now=Date.now();
-  if(isHost&&G&&now-lastPing>4000){
+  if(isHost&&G&&mq&&mq.connected&&now-lastPing>4000){
     lastPing=now; let changed=false;
-    for(const [pid,c] of conns){
-      if(c.open){try{c.send({t:"ping"})}catch(e){}}
-      const p=G.players.find(x=>x.id===pid);
-      if(p&&p.online&&now-(seen.get(pid)||now)>15000){p.online=false;changed=true}
+    pubMsg("st",{t:"ping"});
+    if(now-hostUpSince>16000)for(const p of G.players){
+      if(p.id!==myId&&p.online&&now-(seen.get(p.id)||0)>15000){p.online=false;changed=true}
     }
     if(changed)sync();
   }
-  if(!isHost&&S&&net==="ok"&&clientRetry&&document.visibilityState==="visible"&&now-lastHeard>13000){lastHeard=now;clientRetry()}
+  if(!isHost&&mq){
+    if(!S){ if(mq.connected&&now-lastHello>3000)hello() }
+    else{
+      const n=mq.connected&&now-lastHeard<13000?"ok":"re";
+      if(n==="re"&&mq.connected&&now-lastHello>3000)hello();
+      if(n!==net){net=n;render();return}
+    }
+  }
   if(isHost&&G){
     if(G.phase==="play"&&Date.now()>=G.deadline)endRound();
     else if(G.phase==="collect"&&Date.now()-G.collectAt>=1500){G.phase="review";sync()}
@@ -501,12 +517,12 @@ document.addEventListener("click",ev=>{
   else if(a==="join"){
     const n=readName();if(!n)return;
     const code=(document.getElementById("code").value||"").trim().toLocaleUpperCase("en").replace(/[^A-Z0-9]/g,"");
-    if(code.length!==4){homeError="Oda kodu 4 karakter olmalı.";render();return}
+    if(!/^[A-Z0-9]{4}[1-3]$/.test(code)){homeError="Oda kodu 5 karakter olmalı, örneğin KTRZ1.";render();return}
     everConnected=false;joinRoom(code,n);
   }
   else if(a==="resume"){
     const saved=ls.get("host",null);if(!saved)return;
-    G=saved;delete G.saved;G.players.forEach(p=>p.online=p.id===myId);everConnected=false;openHost(true);
+    G=saved;delete G.saved;if(!/^[A-Z0-9]{4}[1-3]$/.test(G.code||"")){ls.del("host");G=null;render();return}G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
   }
   else if(a==="leave")leave("");
   else if(a==="share"){
@@ -548,7 +564,7 @@ let wake=null;
 async function keepAwake(){try{if(S&&"wakeLock" in navigator&&document.visibilityState==="visible"&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}}catch(e){}}
 document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibilityState==="visible"){tick();if(!isHost&&S)sendDraft()}});
 document.addEventListener("click",keepAwake);
-window.addEventListener("pagehide",()=>{if(!isHost&&hostConn&&hostConn.open){try{hostConn.send({t:"draft",round:S&&S.round,answers:draft})}catch(e){}}});
+window.addEventListener("pagehide",()=>{if(!isHost&&S)sendDraft()});
 
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 render();
