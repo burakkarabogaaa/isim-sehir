@@ -1,5 +1,5 @@
-const CACHE="isim-sehir-v10";
-const FILES=["./","index.html","theme.css","fx.js","isim-sehir-hayvan/","isim-sehir-hayvan/index.html","isim-sehir-hayvan/manifest.webmanifest","icon-192.png","icon-512.png","asmaca/","asmaca/index.html","asmaca/manifest.webmanifest"];
+const CACHE="isim-sehir-v11";
+const FILES=["./","index.html","theme.css","fx.js","isim-sehir-hayvan/","isim-sehir-hayvan/index.html","isim-sehir-hayvan/manifest.webmanifest","icon-192.png","icon-512.png","asmaca/","asmaca/index.html","asmaca/manifest.webmanifest","dart/","dart/index.html","dart/manifest.webmanifest"];
 const CDN=["https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js","https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"];
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(CACHE).then(async c=>{

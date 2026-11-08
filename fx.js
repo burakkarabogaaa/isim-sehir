@@ -59,6 +59,8 @@
     stop(t){tone(t,988,.08,"square",.1);tone(t+.08,1319,.3,"triangle",.16)},
     win(t){[523,659,784,1047].forEach((f,i)=>tone(t+i*.1,f,.35,"triangle",.16));tone(t+.45,1319,.6,"sine",.14)},
     lose(t){[392,349,311,262].forEach((f,i)=>tone(t+i*.17,f,.3,"sawtooth",.09))},
+    throw(t){noise(t,.22,.2);tone(t,900,.2,"sine",.05,300)},
+    thud(t){tone(t,140,.12,"sine",.3,60);noise(t,.06,.3)},
     reveal(t){tone(t,392,.12,"triangle",.1);tone(t+.1,523,.2,"triangle",.12)}
   };
   function play(name){ if(muted)return; const a=ctxA(); if(!a||a.state!=="running")return; const fn=SOUNDS[name]; if(fn)try{fn(a.currentTime)}catch(e){} }
