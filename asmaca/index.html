@@ -360,7 +360,7 @@ function viewHome(){
     <div class="field"><label for="code">Oda kodu</label><input type="text" id="code" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" value="${esc(urlCode||"")}" placeholder="5 karakterli kod" style="letter-spacing:.2em;text-transform:uppercase"></div>
     <button class="btn ${urlCode?"":"ghost"}" data-act="join">Odaya katıl</button>
   </section>
-  <p class="sub center"><a href="../">İsim Şehir Hayvan</a> oynamak için</p>`;
+  <p class="sub center"><a href="../">Tüm oyunlar</a> · <a href="../isim-sehir-hayvan/">İsim Şehir Hayvan</a></p>`;
 }
 function topBar(){
   return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>

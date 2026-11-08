@@ -1,7 +1,7 @@
 {
-  "name": "İsim Şehir Hayvan",
-  "short_name": "İsim Şehir",
-  "description": "Arkadaşlarınla kendi telefonundan oynanan isim şehir hayvan oyunu.",
+  "name": "Oyun Odası",
+  "short_name": "Oyun Odası",
+  "description": "Arkadaşlarınla kendi telefonlarınızdan oynanan oyunlar.",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",
