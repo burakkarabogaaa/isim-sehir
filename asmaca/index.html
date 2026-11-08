@@ -58,7 +58,7 @@
 /* ---------- sabitler ve yardımcılar ---------- */
 const ALPHA=[..."ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"];
 const LEVELS=[["basit","Basit"],["orta","Orta"],["zor","Zor"],["pro","Pro"]];
-const LEVEL={basit:{miss:8,hint:true,len:[3,6]},orta:{miss:6,hint:true,len:[3,24]},zor:{miss:5,hint:false,len:[5,24]},pro:{miss:4,hint:false,len:[7,24]}};
+const LEVEL={basit:{miss:8,hint:true,len:[3,6]},orta:{miss:6,hint:true,len:[3,24]},zor:{miss:5,hint:true,len:[5,24]},pro:{miss:4,hint:true,len:[7,24]}};
 const lvl=st=>LEVEL[st&&st.level]||LEVEL.orta;
 const maxMiss=()=>S?S.maxMiss||6:6;
 const WORDS=[
@@ -319,8 +319,8 @@ function roomMenu(){
 }
 function topBar(){
   return `<div class="top"><button class="pill btn-pill" data-act="menu" aria-haspopup="dialog" aria-expanded="${menuOpen}"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span> ▾</button>
-  <span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
-</div>${roomMenu()}
+  <span class="right"><span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
+<button class="icon-btn" data-act="mute" aria-pressed="${window.FX&&FX.muted}" aria-label="${window.FX&&FX.muted?"Sesi aç":"Sesi kapat"}" title="Ses">${window.FX&&FX.muted?"🔇":"🔊"}</button></span></div>${roomMenu()}
   ${net!=="ok"?`<div class="banner" role="status">${isHost||!mq||!mq.connected?"Bağlantı koptu, yeniden bağlanılıyor…":"Oda sahibine ulaşılamıyor. Onun oyun ekranı açık olmalı."}</div>`:""}`;
 }
 function playerList(){
@@ -342,7 +342,7 @@ function viewLobby(){
       <p class="sub">${st.mode==="pc"?"Herkes tahmin eder, kelimeler listeden gelir. Tek başına da oynanır.":"Her turda bir oyuncu kelime yazar, diğerleri tahmin eder."}</p>
       <h2>Zorluk</h2>
       <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="level" data-level="${k}" aria-pressed="${(st.level||"orta")===k}">${t}</button>`).join("")}</div>
-      <p class="sub">${({basit:"8 can, ipucu var, kısa kelimeler.",orta:"6 can, ipucu var.",zor:"5 can, ipucu yok.",pro:"4 can, ipucu yok, uzun kelimeler."})[st.level||"orta"]}</p>
+      <p class="sub">${({basit:"8 can, kısa kelimeler.",orta:"6 can.",zor:"5 can, orta ve uzun kelimeler.",pro:"4 can, uzun kelimeler."})[st.level||"orta"]}</p>
       <div class="field"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
     </section>
     <button class="btn" data-act="start">Oyunu başlat</button>`
@@ -353,7 +353,7 @@ function viewLobby(){
     <p class="sub">Kod, QR ve katılma linki üstteki oda kodunun altındaki menüde.</p></section>
   ${settings}`;
 }
-let shownMiss=0;
+let shownMiss=0, shownGuessed=0, prevTurn=null;
 function gallows(n){
   const mm=maxMiss(), steps=Math.max(0,Math.min(6,Math.round(n/mm*6)));   // can sayısı değişse de 6 parçalı çizim
   const cls=i=>"part "+(steps>i?(shownMiss>i?"on old":"on"):"");
@@ -380,7 +380,7 @@ function viewSet(){
     <h2>${mine?"Kelimeyi sen tutuyorsun":esc(nameOf(S.setter))+" kelime yazıyor…"}</h2>
     ${mine?`
     <div class="field"><label for="word">Kelime</label><input type="text" id="word" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Sadece harf, en az 3"></div>
-    ${lvl(S.settings).hint?`<div class="field"><label for="hint">İpucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>`:`<p class="sub">Bu zorlukta ipucu verilmez.</p>`}
+    ${lvl(S.settings).hint?`<div class="field"><label for="hint">Kategori / ipucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>`:`<p class="sub">Bu zorlukta ipucu verilmez.</p>`}
     ${formError?`<p class="err">${esc(formError)}</p>`:""}
     <button class="btn" data-act="word">Kelimeyi gönder</button>
     <p class="sub">Ekranını kimseye gösterme. Kelime asılırsa 40 puan senin.</p>`
@@ -395,7 +395,7 @@ function viewPlay(){
     <div class="gallows">${gallows(S.misses)}
       <div class="grow"><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p>
         <h2>${setter?"Senin kelimen":"Kelimeyi "+esc(nameOf(S.setter))+" tuttu"}</h2>
-        ${S.hint?`<p>İpucu: <b>${esc(S.hint)}</b></p>`:""}
+        ${S.hint?`<p>${S.setter==="pc"?"Kategori":"İpucu"}: <b>${esc(S.hint)}</b></p>`:`<p class="sub">İpucu yok</p>`}
         ${lives()}<p class="misses sub">Kalan can: ${maxMiss()-S.misses}</p></div>
     </div>
     ${wordRow()}
@@ -419,7 +419,7 @@ function viewReveal(){
         <p class="sub">${r.hanged?(S.setter==="pc"?"Kimse bilemedi.":esc(nameOf(S.setter))+" 40 puan aldı."):"Kelime çözüldü."}</p></div>
     </div>
     ${wordRow()}
-    ${S.hint?`<p class="center sub">İpucu: ${esc(S.hint)}</p>`:""}
+    ${S.hint?`<p class="center sub">${S.setter==="pc"?"Kategori":"İpucu"}: ${esc(S.hint)}</p>`:""}
   </section>
   <section class="card"><h2>Puan durumu</h2>
     <table class="rank"><tbody>${board.map((p,i)=>`<tr style="--i:${i}" class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
@@ -455,10 +455,16 @@ function render(){
     if(keep){const el=document.getElementById(keep.id);if(el&&!el.disabled){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
     if(!samePhase)window.scrollTo(0,0);
     if(S&&window.FX){
-      if(S.phase==="play"&&S.misses>shownMiss&&samePhase)FX.shake(document.querySelector(".gallows"));
-      if(S.phase==="reveal"&&S.result&&!S.result.hanged&&!samePhase)FX.confetti();
-      if(S.phase==="final"&&!samePhase)FX.confetti();
+      if(S.phase==="play"&&samePhase){
+        if(S.misses>shownMiss){FX.shake(document.querySelector(".gallows"));snd("bad")}
+        else if((S.guessed||[]).length>shownGuessed)snd("good");
+        if(S.turn===myId&&prevTurn!==myId)snd("turn");
+      }
+      if(S.phase==="play"&&!samePhase){snd("start"); if(S.turn===myId)setTimeout(()=>snd("turn"),400)}
+      if(S.phase==="reveal"&&!samePhase){ if(S.result&&!S.result.hanged){FX.confetti();snd("win")} else snd("lose") }
+      if(S.phase==="final"&&!samePhase){FX.confetti();snd("win")}
     }
+    if(S){shownGuessed=S.phase==="play"?(S.guessed||[]).length:0; prevTurn=S.phase==="play"?S.turn:null}
     if(S){shownMiss=S.phase==="play"||S.phase==="reveal"?S.misses:0; known=(S.masked||[]).map(c=>!!c)}
   }
 }
@@ -506,6 +512,7 @@ document.addEventListener("click",ev=>{
   }
   else if(a==="leave"){menuOpen=false;leave("")}
   else if(a==="menu"){menuOpen=true;render()}
+  else if(a==="mute"){if(window.FX){FX.setMuted(!FX.muted);if(!FX.muted)FX.sound("tap")}lastHTML="";render()}
   else if(a==="menu-close"){if(ev.target.closest("[data-stop]")&&!ev.target.closest('[data-act="menu-close"].btn'))return;menuOpen=false;render()}
   else if(a==="copycode"){
     const msg=document.getElementById("sharemsg"),done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
@@ -548,6 +555,8 @@ let wake=null;
 async function keepAwake(){try{if(S&&"wakeLock" in navigator&&document.visibilityState==="visible"&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}}catch(e){}}
 document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibilityState==="visible")tick()});
 document.addEventListener("click",keepAwake);
+document.addEventListener("click",ev=>{const b=ev.target.closest("button");if(b&&!b.disabled&&window.FX&&!b.classList.contains("key")&&b.dataset.act!=="mute")FX.sound("tap")});
+const snd=n=>{if(window.FX)FX.sound(n)};
 
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("../sw.js").catch(()=>{});
 render();

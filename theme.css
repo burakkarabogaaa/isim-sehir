@@ -116,6 +116,11 @@ button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 .seg button[aria-pressed=true]{background:var(--card-solid); color:var(--ink); box-shadow:var(--shadow)}
 .seg button:active{transform:scale(.95)}
 
+.icon-btn{width:40px; height:40px; border-radius:50%; border:1px solid var(--line-2); background:var(--card-solid); color:var(--ink); font-size:1.1rem; display:inline-grid; place-items:center; transition:transform .15s var(--spring)}
+.icon-btn:active{transform:scale(.9)}
+.icon-btn[aria-pressed=true]{color:var(--soft); opacity:.7}
+.top .right{display:flex; gap:8px; align-items:center}
+
 /* oda menüsü (alt sayfa) */
 .pill.btn-pill{cursor:pointer; border-color:var(--line-2); color:var(--ink); background:var(--card-solid); transition:transform .15s var(--spring)}
 .pill.btn-pill:active{transform:scale(.95)}

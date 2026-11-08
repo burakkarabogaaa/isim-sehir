@@ -347,8 +347,8 @@ function roomMenu(){
 }
 function topBar(){
   return `<div class="top"><button class="pill btn-pill" data-act="menu" aria-haspopup="dialog" aria-expanded="${menuOpen}"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span> ▾</button>
-  <span class="pill">${S.players.filter(p=>p.online&&!p.pc).length} oyuncu</span>
-</div>${roomMenu()}
+  <span class="right"><span class="pill">${S.players.filter(p=>p.online&&!p.pc).length} oyuncu</span>
+<button class="icon-btn" data-act="mute" aria-pressed="${window.FX&&FX.muted}" aria-label="${window.FX&&FX.muted?"Sesi aç":"Sesi kapat"}" title="Ses">${window.FX&&FX.muted?"🔇":"🔊"}</button></span></div>${roomMenu()}
   ${net!=="ok"?`<div class="banner" role="status">${isHost||!mq||!mq.connected?"Bağlantı koptu, yeniden bağlanılıyor…":"Oda sahibine ulaşılamıyor. Onun oyun ekranı açık olmalı."}</div>`:""}`;
 }
 function playerList(){
@@ -451,7 +451,11 @@ function render(){
       for(const id in vals){const el=document.getElementById(id);if(el&&!el.dataset.cat)el.value=vals[id]}
     }
     if(keep){const el=document.getElementById(keep.id);if(el&&!el.disabled){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
-    if(!samePhase){window.scrollTo(0,0); if(S&&S.phase==="final"&&window.FX)FX.confetti()}
+    if(!samePhase){window.scrollTo(0,0);
+      if(S&&S.phase==="final"){if(window.FX)FX.confetti(); snd("win")}
+      else if(S&&S.phase==="play")snd("start");
+      else if(S&&S.phase==="collect")snd("stop");
+      else if(S&&S.phase==="review")snd("reveal");}
   }
   tick();
 }
@@ -483,7 +487,7 @@ function tick(){
   if(t){
     const left=S.phase==="collect"?0:Math.max(0,Math.ceil((deadlineLocal-Date.now())/1000));
     const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
-    if(t.textContent!==txt)t.textContent=txt;
+    if(t.textContent!==txt){t.textContent=txt; if(S.phase==="play"&&left<=10&&left>0)snd("tick")}
     const ring=document.getElementById("ring"),bar=document.getElementById("bar");
     if(ring)ring.classList.toggle("low",left<=10&&S.phase==="play");
     if(bar){const total=S.settings.secs*1000,rem=S.phase==="collect"?0:Math.max(0,deadlineLocal-Date.now());bar.style.strokeDashoffset=(226*(1-rem/total)).toFixed(1)}
@@ -521,6 +525,7 @@ document.addEventListener("click",ev=>{
   }
   else if(a==="leave"){menuOpen=false;leave("")}
   else if(a==="menu"){menuOpen=true;render()}
+  else if(a==="mute"){if(window.FX){FX.setMuted(!FX.muted);if(!FX.muted)FX.sound("tap")}lastHTML="";render()}
   else if(a==="menu-close"){if(ev.target.closest("[data-stop]")&&!ev.target.closest('[data-act="menu-close"].btn'))return;menuOpen=false;render()}
   else if(a==="copycode"){
     const msg=document.getElementById("sharemsg"),done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
@@ -566,6 +571,8 @@ let wake=null;
 async function keepAwake(){try{if(S&&"wakeLock" in navigator&&document.visibilityState==="visible"&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>{wake=null})}}catch(e){}}
 document.addEventListener("visibilitychange",()=>{keepAwake();if(document.visibilityState==="visible"){tick();if(!isHost&&S)sendDraft()}});
 document.addEventListener("click",keepAwake);
+document.addEventListener("click",ev=>{const b=ev.target.closest("button");if(b&&!b.disabled&&window.FX&&!b.classList.contains("key")&&b.dataset.act!=="mute")FX.sound("tap")});
+const snd=n=>{if(window.FX)FX.sound(n)};
 window.addEventListener("pagehide",()=>{if(!isHost&&S)sendDraft()});
 
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("../sw.js").catch(()=>{});
