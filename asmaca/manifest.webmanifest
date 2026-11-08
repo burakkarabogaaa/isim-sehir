@@ -1,0 +1,16 @@
+{
+  "name": "Adam Asmaca",
+  "short_name": "Asmaca",
+  "description": "Arkadaşlarınla kendi telefonundan oynanan adam asmaca.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef3fa",
+  "theme_color": "#1f3a8a",
+  "icons": [
+    {"src": "../icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "../icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

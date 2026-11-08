@@ -92,6 +92,7 @@ button{font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
 .timer.low{color:var(--bad)}
 .banner{background:var(--mark); color:var(--mark-ink); border-radius:8px; padding:10px 12px; font-weight:700; text-align:center}
 .err{color:var(--bad); font-weight:600}
+a{color:var(--accent)}
 table{width:100%; border-collapse:collapse}
 td,th{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; overflow-wrap:anywhere}
 th{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
@@ -354,7 +355,8 @@ function viewHome(){
   <section class="card">
     <div class="field"><label for="code">Oda kodu</label><input type="text" id="code" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false" value="${esc(urlCode||"")}" placeholder="5 karakterli kod" style="letter-spacing:.2em;text-transform:uppercase"></div>
     <button class="btn ${urlCode?"":"ghost"}" data-act="join">Odaya katıl</button>
-  </section>`;
+  </section>
+  <p class="sub center"><a href="asmaca/">Adam Asmaca</a> oynamak için</p>`;
 }
 function topBar(){
   return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>
