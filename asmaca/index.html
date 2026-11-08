@@ -44,6 +44,10 @@
 .key.hit{background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:var(--gold-ink); border-color:transparent; opacity:1}
 .key.miss{background:transparent; color:var(--bad); text-decoration:line-through; opacity:.6}
 .secret{font:700 1.5rem/1.2 var(--display); letter-spacing:.14em}
+.banner{display:flex; justify-content:center; gap:10px; align-items:center}
+.tcount{min-width:2.2em; padding:2px 8px; border-radius:99px; background:rgba(0,0,0,.12); font-variant-numeric:tabular-nums}
+.tcount.low{background:var(--bad); color:#fff; animation:pulse .6s infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
 .winner{font-size:2.6rem; background:linear-gradient(135deg,var(--gold),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; animation:pop-in .7s var(--spring) both}
 .trophy{font-size:3rem; line-height:1; animation:float 3s ease-in-out infinite}
 </style>
@@ -58,8 +62,10 @@
 /* ---------- sabitler ve yardımcılar ---------- */
 const ALPHA=[..."ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"];
 const LEVELS=[["basit","Basit"],["orta","Orta"],["zor","Zor"],["pro","Pro"]];
-const LEVEL={basit:{miss:8,hint:true,len:[3,6]},orta:{miss:6,hint:true,len:[3,24]},zor:{miss:5,hint:true,len:[5,24]},pro:{miss:4,hint:true,len:[7,24]}};
+/* turn: harf başına saniye (0 = süresiz). Süre dolarsa bir can gider ve sıra geçer. wordCost: yanlış kelime tahmininin can bedeli. */
+const LEVEL={basit:{miss:8,len:[3,6],turn:0,wordCost:1},orta:{miss:6,len:[3,24],turn:0,wordCost:1},zor:{miss:4,len:[7,24],turn:15,wordCost:2},pro:{miss:3,len:[8,24],turn:8,wordCost:2}};
 const lvl=st=>LEVEL[st&&st.level]||LEVEL.orta;
+function fixSettings(st){st=Object.assign({level:"orta"},st);if(![5,10,15,20,30].includes(st.rounds))st.rounds=10;return st}
 const maxMiss=()=>S?S.maxMiss||6:6;
 const WORDS=[
  ["KEDİ","Hayvan"],["ZÜRAFA","Hayvan"],["PENGUEN","Hayvan"],["KAPLUMBAĞA","Hayvan"],["SİNCAP","Hayvan"],["YUNUS","Hayvan"],["FLAMİNGO","Hayvan"],["KİRPİ","Hayvan"],["BAYKUŞ","Hayvan"],["TİMSAH","Hayvan"],
@@ -71,7 +77,14 @@ const WORDS=[
  ["BAKLAVA","Yemek"],["MANTI","Yemek"],["LAHMACUN","Yemek"],["HELLİM","Yemek"],["KÖFTE","Yemek"],["MOLEHİYA","Yemek"],["PİLAVUNA","Yemek"],["ŞEFTALİ KEBABI","Yemek"],["MERCİMEK","Yemek"],["KÜNEFE","Yemek"],
  ["FUTBOL","Spor"],["BASKETBOL","Spor"],["YÜZME","Spor"],["DART","Spor"],["TENİS","Spor"],["VOLEYBOL","Spor"],["OKÇULUK","Spor"],["ESKRİM","Spor"],["BOKS","Spor"],["KAYAK","Spor"],
  ["GİTAR","Müzik aleti"],["BAĞLAMA","Müzik aleti"],["PİYANO","Müzik aleti"],["KEMAN","Müzik aleti"],["DAVUL","Müzik aleti"],["KLARNET","Müzik aleti"],["FLÜT","Müzik aleti"],["AKORDEON","Müzik aleti"],
- ["GÖKKUŞAĞI","Doğa"],["ŞİMŞEK","Doğa"],["VOLKAN","Doğa"],["ŞELALE","Doğa"],["ÇÖL","Doğa"],["OKYANUS","Doğa"],["BUZUL","Doğa"],["KASIRGA","Doğa"]
+ ["GÖKKUŞAĞI","Doğa"],["ŞİMŞEK","Doğa"],["VOLKAN","Doğa"],["ŞELALE","Doğa"],["ÇÖL","Doğa"],["OKYANUS","Doğa"],["BUZUL","Doğa"],["KASIRGA","Doğa"],
+ ["ORANGUTAN","Hayvan"],["GERGEDAN","Hayvan"],["SU AYGIRI","Hayvan"],["KELEBEK","Hayvan"],["DENİZANASI","Hayvan"],["BUKALEMUN","Hayvan"],["KANGURU","Hayvan"],["AHTAPOT","Hayvan"],
+ ["AVUSTRALYA","Ülke"],["ARJANTİN","Ülke"],["ENDONEZYA","Ülke"],["PORTEKİZ","Ülke"],["GÜNEY AFRİKA","Ülke"],["KAZAKİSTAN","Ülke"],["İSVİÇRE","Ülke"],["DANİMARKA","Ülke"],
+ ["MUHASEBECİ","Meslek"],["VETERİNER","Meslek"],["ELEKTRİKÇİ","Meslek"],["TESİSATÇI","Meslek"],["İTFAİYECİ","Meslek"],["ARKEOLOG","Meslek"],["DİŞ HEKİMİ","Meslek"],["PSİKOLOG","Meslek"],
+ ["ÇAMAŞIR MAKİNESİ","Eşya"],["TELEVİZYON","Eşya"],["ELEKTRİK SÜPÜRGESİ","Eşya"],["MİKRODALGA","Eşya"],["TERMOMETRE","Eşya"],["HESAP MAKİNESİ","Eşya"],
+ ["KARNABAHAR","Bitki"],["PATLICAN","Bitki"],["AYÇİÇEĞİ","Bitki"],["ORKİDE","Bitki"],["LAVANTA","Bitki"],["OKALİPTÜS","Bitki"],
+ ["HÜNKAR BEĞENDİ","Yemek"],["İMAM BAYILDI","Yemek"],["KARNIYARIK","Yemek"],["İÇLİ KÖFTE","Yemek"],["ZEYTİNYAĞLI SARMA","Yemek"],["TAVUK GÖĞSÜ","Yemek"],
+ ["MİKROSKOP","Bilim"],["TELESKOP","Bilim"],["YERÇEKİMİ","Bilim"],["FOTOSENTEZ","Bilim"],["ELEKTRON","Bilim"],["GALAKSİ","Bilim"],["KROMOZOM","Bilim"],["ATMOSFER","Bilim"]
 ];
 const QS=new URLSearchParams(location.search);
 const NS="asm"+(QS.get("p")?"-"+QS.get("p"):"")+"-";
@@ -102,8 +115,8 @@ function pubMsg(k,m,qos){ if(mq&&mq.connected&&roomCode){try{mq.publish(topic(ro
 
 /* ---------- oda sahibi: oyun kuralları ---------- */
 function pub(){
-  const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,v:g.v||0,maxMiss:lvl(g.settings).miss,
-    round:g.round,setter:g.setter,hint:g.hint,masked:g.masked,guessed:g.guessed,misses:g.misses,turn:g.turn,result:g.result,lastWrong:g.lastWrong||null};
+  const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,v:g.v||0,maxMiss:lvl(g.settings).miss,turnSecs:lvl(g.settings).turn,turnLeft:g.phase==="play"&&g.turnDeadline?Math.max(0,g.turnDeadline-Date.now()):0,
+    round:g.round,setter:g.setter,hint:g.hint,masked:g.masked,guessed:g.guessed,misses:g.misses,turn:g.turn,result:g.result,lastWrong:g.lastWrong||null,timeout:g.timeout||null};
   if(g.phase==="reveal"||g.phase==="final")s.word=g.word;
   return s;
 }
@@ -115,15 +128,17 @@ function sync(){
 }
 const online=()=>G.players.filter(p=>p.online);
 const guessers=()=>online().filter(p=>p.id!==G.setter);
+function armTurn(){const t=lvl(G.settings).turn; G.turnDeadline=t?Date.now()+t*1000:0}
 function nextTurn(from){
   const gs=guessers(); if(!gs.length){G.turn=null;return}
   const i=gs.findIndex(p=>p.id===from);
-  G.turn=gs[(i+1)%gs.length].id;
+  G.turn=gs[(i+1)%gs.length].id; armTurn();
 }
+function loseLife(n,from){ G.misses+=n; if(G.misses>=lvl(G.settings).miss){G.misses=lvl(G.settings).miss;finishRound(null);return true} nextTurn(from); return false }
 function setWord(word,hint){
-  G.word=word; G.hint=lvl(G.settings).hint?(hint||"").slice(0,30):"";
-  G.masked=[...word].map(c=>c===" "?" ":null); G.guessed=[]; G.misses=0; G.result=null; G.lastWrong=null; G.phase="play";
-  const gs=guessers(); G.turn=gs.length?gs[Math.floor(Math.random()*gs.length)].id:null;
+  G.word=word; G.hint=(hint||"").slice(0,30);
+  G.masked=[...word].map(c=>c===" "?" ":null); G.guessed=[]; G.misses=0; G.result=null; G.lastWrong=null; G.timeout=null; G.phase="play";
+  const gs=guessers(); G.turn=gs.length?gs[Math.floor(Math.random()*gs.length)].id:null; armTurn();
   sync();
 }
 function beginRound(){
@@ -131,7 +146,7 @@ function beginRound(){
   if(G.settings.mode==="pc"||online().length<2){
     G.setter="pc"; const L=lvl(G.settings);
     let pool=WORDS.filter(w=>{const n=w[0].replace(/ /g,"").length;return n>=L.len[0]&&n<=L.len[1]}); if(!pool.length)pool=WORDS;
-    const w=pool[Math.floor(Math.random()*pool.length)]; setWord(w[0],L.hint?w[1]:"");
+    const w=pool[Math.floor(Math.random()*pool.length)]; setWord(w[0],w[1]);
   }else{
     const ps=online(); G.setter=ps[(G.round-1)%ps.length].id; G.phase="set"; sync();
   }
@@ -157,17 +172,18 @@ function hostHandle(m,pid){
   }else if(m.t==="g"){
     if(G.phase!=="play"||pid!==G.turn)return;
     const l=up(m.l); if(!ALPHA.includes(l)||G.guessed.includes(l))return;
-    G.guessed.push(l);
+    G.guessed.push(l); G.timeout=null; G.lastWrong=null;
     const p=G.players.find(x=>x.id===pid); let n=0;
     [...G.word].forEach((c,i)=>{if(c===l){G.masked[i]=l;n++}});
-    if(n){ if(p)p.score+=10*n; if(!G.masked.includes(null)){finishRound(pid);return} }
-    else{ G.misses++; if(G.misses>=lvl(G.settings).miss){finishRound(null);return} nextTurn(pid) }
+    if(n){ if(p)p.score+=10*n; if(!G.masked.includes(null)){finishRound(pid);return} armTurn() }
+    else if(loseLife(1,pid))return;
     sync();
   }else if(m.t==="w"){
     if(G.phase!=="play"||pid!==G.turn)return;
     if(up(m.w)===G.word){finishRound(pid);return}
-    G.misses++; if(G.misses>=lvl(G.settings).miss){finishRound(null);return}
-    nextTurn(pid); G.lastWrong={pid,w:up(m.w).slice(0,24)}; sync();
+    G.lastWrong={pid,w:up(m.w).slice(0,24)};
+    if(loseLife(lvl(G.settings).wordCost,pid))return;
+    sync();
   }
 }
 function fixTurn(){
@@ -216,7 +232,7 @@ function openHost(resume,idx){
 }
 function createRoom(name){
   G={code:rid(4)+"1",phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
-     settings:Object.assign({level:"orta"},ls.get("settings",{rounds:5,mode:"sira"})),round:0,setter:null,word:"",hint:"",masked:[],guessed:[],misses:0,turn:null,result:null,v:0};
+     settings:fixSettings(ls.get("settings",{rounds:10,mode:"sira"})),round:0,setter:null,word:"",hint:"",masked:[],guessed:[],misses:0,turn:null,result:null,v:0};
   everConnected=false; openHost(false,0);
 }
 function hello(){lastHello=Date.now(); pubMsg("in",{t:"join",pid:myId,name:myName},1)}
@@ -268,9 +284,10 @@ function send(m){
   if(isHost)hostHandle(m,myId);
   else pubMsg("in",Object.assign({pid:myId},m),1);
 }
+let turnDeadlineLocal=0;
 function apply(s){
   const prevKey=S&&S.code+"#"+S.round;
-  S=s;
+  S=s; turnDeadlineLocal=s.turnSecs&&s.phase==="play"?Date.now()+(s.turnLeft||0):0;
   if(prevKey!==s.code+"#"+s.round){mySecret="";formError=""}
   render();
 }
@@ -342,8 +359,8 @@ function viewLobby(){
       <p class="sub">${st.mode==="pc"?"Herkes tahmin eder, kelimeler listeden gelir. Tek başına da oynanır.":"Her turda bir oyuncu kelime yazar, diğerleri tahmin eder."}</p>
       <h2>Zorluk</h2>
       <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="level" data-level="${k}" aria-pressed="${(st.level||"orta")===k}">${t}</button>`).join("")}</div>
-      <p class="sub">${({basit:"8 can, kısa kelimeler.",orta:"6 can.",zor:"5 can, orta ve uzun kelimeler.",pro:"4 can, uzun kelimeler."})[st.level||"orta"]}</p>
-      <div class="field"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
+      <p class="sub">${({basit:"8 can, kısa kelimeler, süre yok.",orta:"6 can, süre yok.",zor:"4 can, 7+ harf, harf başına 15 saniye. Yanlış kelime 2 can.",pro:"3 can, 8+ harf, harf başına 8 saniye. Yanlış kelime 2 can. Yorulmaya hazır ol."})[st.level||"orta"]}</p>
+      <div class="field"><label for="rounds">Tur sayısı</label><select id="rounds">${[5,10,15,20,30].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
     </section>
     <button class="btn" data-act="start">Oyunu başlat</button>`
   :`<section class="card"><h2>Oyun ayarları</h2><p>${st.mode==="pc"?"Kelimeleri bilgisayar seçer":"Kelimeyi sırayla oyuncular tutar"} · ${st.rounds} tur · ${(LEVELS.find(l=>l[0]===(st.level||"orta"))||LEVELS[1])[1]}</p></section>
@@ -380,7 +397,7 @@ function viewSet(){
     <h2>${mine?"Kelimeyi sen tutuyorsun":esc(nameOf(S.setter))+" kelime yazıyor…"}</h2>
     ${mine?`
     <div class="field"><label for="word">Kelime</label><input type="text" id="word" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Sadece harf, en az 3"></div>
-    ${lvl(S.settings).hint?`<div class="field"><label for="hint">Kategori / ipucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>`:`<p class="sub">Bu zorlukta ipucu verilmez.</p>`}
+    <div class="field"><label for="hint">Kategori / ipucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>
     ${formError?`<p class="err">${esc(formError)}</p>`:""}
     <button class="btn" data-act="word">Kelimeyi gönder</button>
     <p class="sub">Ekranını kimseye gösterme. Kelime asılırsa 40 puan senin.</p>`
@@ -400,12 +417,13 @@ function viewPlay(){
     </div>
     ${wordRow()}
     ${setter&&mySecret?`<p class="center sub">Kelime: <span class="secret">${esc(mySecret)}</span></p>`:""}
-    <div class="banner" role="status">${setter?"Tahminleri izliyorsun":myTurn?"Sıra sende, bir harf seç":S.turn?"Sıra "+esc(nameOf(S.turn))+"'de":"Tahmin edecek kimse yok"}</div>
+    <div class="banner" role="status"><span>${setter?"Tahminleri izliyorsun":myTurn?"Sıra sende, bir harf seç":S.turn?"Sıra "+esc(nameOf(S.turn))+"'de":"Tahmin edecek kimse yok"}</span>${S.turnSecs?` <span class="tcount" id="tcount"></span>`:""}</div>
+    ${S.timeout?`<p class="sub center">${esc(nameOf(S.timeout.pid))} süreyi kaçırdı, bir can gitti.</p>`:""}
   </section>
   ${setter?"":`<section class="card">
     <div class="keys">${ALPHA.map(l=>{const g=S.guessed.includes(l),hit=g&&S.masked.includes(l);return `<button class="key ${g?(hit?"hit":"miss"):""}" data-act="g" data-l="${l}" ${g||!myTurn?"disabled":""}>${l}</button>`}).join("")}</div>
     <div class="row"><div class="grow"><input type="text" id="wguess" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Kelimenin tamamını yaz" ${myTurn?"":"disabled"}></div><button class="btn gold small" data-act="w" ${myTurn?"":"disabled"}>Tahmin et</button></div>
-    <p class="sub">${lw?esc(nameOf(lw.pid))+" \""+esc(lw.w)+"\" dedi, tutmadı. ":""}Yanlış kelime tahmini bir yanlış sayılır ve sıra geçer.</p>
+    <p class="sub">${lw?esc(nameOf(lw.pid))+" \""+esc(lw.w)+"\" dedi, tutmadı. ":""}Yanlış kelime tahmini ${lvl(S.settings).wordCost} can götürür ve sıra geçer.</p>
   </section>`}
   <section class="card"><h2>Oyuncular</h2>${playerList()}</section>`;
 }
@@ -468,8 +486,15 @@ function render(){
     if(S){shownMiss=S.phase==="play"||S.phase==="reveal"?S.misses:0; known=(S.masked||[]).map(c=>!!c)}
   }
 }
+let lastTickSec=-1;
 function tick(){
   const now=Date.now();
+  const tc=document.getElementById("tcount");
+  if(tc&&S&&S.phase==="play"&&turnDeadlineLocal){
+    const left=Math.max(0,Math.ceil((turnDeadlineLocal-now)/1000)); const txt=left+" sn";
+    if(tc.textContent!==txt){tc.textContent=txt; if(S.turn===myId&&left<=5&&left>0&&left!==lastTickSec){lastTickSec=left;snd("tick")}}
+    tc.classList.toggle("low",left<=5);
+  }
   if(isHost&&G&&mq&&mq.connected&&now-lastPing>4000){
     lastPing=now; let changed=false;
     pubMsg("st",{t:"ping"});
@@ -477,6 +502,9 @@ function tick(){
       if(p.id!==myId&&p.online&&now-(seen.get(p.id)||0)>15000){p.online=false;changed=true}
     }
     if(changed){const t=G.turn;fixTurn();sync()}
+  }
+  if(isHost&&G&&G.phase==="play"&&G.turnDeadline&&now>=G.turnDeadline&&G.turn){
+    const from=G.turn; G.lastWrong=null; G.timeout={pid:from}; if(!loseLife(1,from))sync();
   }
   if(!isHost&&mq){
     if(!S){ if(mq.connected&&now-lastHello>3000)hello() }
@@ -508,7 +536,7 @@ document.addEventListener("click",ev=>{
   }
   else if(a==="resume"){
     const saved=ls.get("host",null);if(!saved||!codeOk(saved.code))return;
-    G=saved;delete G.saved;G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
+    G=saved;delete G.saved;G.settings=fixSettings(G.settings);G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
   }
   else if(a==="leave"){menuOpen=false;leave("")}
   else if(a==="menu"){menuOpen=true;render()}

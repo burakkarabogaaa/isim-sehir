@@ -71,15 +71,18 @@ const PC_WORDS={
  "marka":{A:["Apple","Adidas","Arçelik"],B:["BMW","Beko","Bosch"],C:["Canon","Coca-Cola"],Ç:["Çaykur"],D:["Dell","Dove"],E:["Eti","Efes"],F:["Ford","Fiat","Ferrari"],G:["Google","Gucci"],H:["Honda","Huawei"],I:["IKEA"],İ:["İş Bankası"],K:["Koton","Kia"],L:["Lego","LC Waikiki","Lenovo"],M:["Mercedes","Mavi","Migros"],N:["Nike","Nestlé","Nokia"],O:["Opel","Oreo"],P:["Pepsi","Puma","Philips"],R:["Renault","Rolex"],S:["Samsung","Sony","Starbucks"],Ş:["Şölen","Şok"],T:["Toyota","Tesla","Turkcell"],U:["Uno","Under Armour"],Ü:["Ülker"],V:["Vodafone","Volvo","Vestel"],Y:["Yapı Kredi","Yamaha"],Z:["Zara","Zorlu"]}
 };
 const PC={id:"pc",name:"Bilgisayar",pc:true};
-function fixSettings(st){st=Object.assign({pc:"off"},st);if(!["off","basit","orta","zor","pro"].includes(st.pc))st.pc=st.pc==="kolay"?"basit":"orta";return st}
-const PC_RATE={basit:0.45,orta:0.7,zor:0.9,pro:1};
-const PC_STOP={basit:[0.9,1.2],orta:[0.65,0.9],zor:[0.45,0.65],pro:[0.3,0.45]};
+function fixSettings(st){st=Object.assign({pc:"off"},st);if(![5,10,15,20,30].includes(st.rounds))st.rounds=10;if(!["off","basit","orta","zor","pro"].includes(st.pc))st.pc=st.pc==="kolay"?"basit":"orta";return st}
+const PC_RATE={basit:0.45,orta:0.7,zor:1,pro:1};
+const PC_STOP={basit:[0.9,1.2],orta:[0.6,0.85],zor:[0.28,0.4],pro:[0.14,0.22]};
+/* Zor/Pro: bilgisayar listedeki nadir kelimeyi seçer (oyuncuyla aynı cevabı verip 5 puana düşmez), Pro ayrıca süreyi 45 sn'ye ve kategorileri 9'a çıkarır. */
+const PC_PRESET={zor:{secs:60},pro:{secs:45,cats:["İsim","Şehir","Hayvan","Bitki","Eşya","Ülke","Meslek","Yemek","Marka"]}};
 const LEVELS=[["off","Yok"],["basit","Basit"],["orta","Orta"],["zor","Zor"],["pro","Pro"]];
 function pcPlan(letter,cats,level){
   const a={}, L=norm(letter);
   for(const c of cats){
     const d=PC_WORDS[norm(c)]; const list=d&&(d[letter]||d[L.toLocaleUpperCase("tr")])||[];
-    a[c]=list.length&&Math.random()<PC_RATE[level]?list[Math.floor(Math.random()*list.length)]:"";
+    const rare=level==="zor"||level==="pro";
+    a[c]=list.length&&Math.random()<PC_RATE[level]?(rare?list[list.length-1]:list[Math.floor(Math.random()*list.length)]):"";
   }
   return a;
 }
@@ -232,7 +235,7 @@ function openHost(resume,idx){
 }
 function createRoom(name){
   G={code:rid(4)+"1",phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
-     settings:fixSettings(ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:5})),
+     settings:fixSettings(ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:10})),
      round:0,letter:"",used:[],answers:{},invalid:{},stopper:null,deadline:0,v:0};
   everConnected=false; openHost(false,0);
 }
@@ -367,10 +370,10 @@ function viewLobby(){
       <div class="row"><div class="grow"><input type="text" id="newcat" maxlength="18" placeholder="Kendi kategorin"></div><button class="btn ghost small" data-act="addcat">Ekle</button></div>
       <h2>Bilgisayar rakip</h2>
       <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="pc" data-pc="${k}" aria-pressed="${(st.pc||"off")===k}">${t}</button>`).join("")}</div>
-      <p class="sub">${st.pc==="off"?"Sadece oyuncular yarışır.":({basit:"Bilgisayar kutuların yarısını doldurur, acele etmez.",orta:"Bilgisayar çoğu kutuyu doldurur, sürenin ortasında bitirebilir.",zor:"Bilgisayar neredeyse her kutuyu doldurur ve erken bitirir.",pro:"Bilgisayar bildiği her kutuyu doldurur ve çok erken bitirir. Kendi eklediğin kategorileri bilmez."})[st.pc]}</p>
+      <p class="sub">${st.pc==="off"?"Sadece oyuncular yarışır.":({basit:"Bilgisayar kutuların yarısını doldurur, acele etmez.",orta:"Bilgisayar çoğu kutuyu doldurur, sürenin ortasında bitirebilir.",zor:"Bilgisayar her kutuyu nadir kelimelerle doldurur ve sürenin üçte birinde bitirir. Süre 60 saniyeye iner.",pro:"Bilgisayar her kutuyu doldurur ve sürenin beşte birinde bitirir. 45 saniye, 9 kategori. Yetişmek için yazarken düşünmemen gerekir."})[st.pc]}</p>
       <div class="row">
-        <div class="field grow"><label for="secs">Süre</label><select id="secs">${[45,60,90,120,180].map(v=>`<option value="${v}" ${v===st.secs?"selected":""}>${v} saniye</option>`).join("")}</select></div>
-        <div class="field grow"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10,15].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
+        <div class="field grow"><label for="secs">Süre</label><select id="secs">${[30,45,60,90,120,180].map(v=>`<option value="${v}" ${v===st.secs?"selected":""}>${v} saniye</option>`).join("")}</select></div>
+        <div class="field grow"><label for="rounds">Tur sayısı</label><select id="rounds">${[5,10,15,20,30].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
       </div>
     </section>
     <button class="btn" data-act="start" ${st.cats.length?"":"disabled"}>Oyunu başlat</button>`
@@ -546,7 +549,7 @@ document.addEventListener("click",ev=>{
     if(c&&!G.settings.cats.some(x=>norm(x)===norm(c))){G.settings.cats.push(c);el.value="";setSettings()}
   }
   else if(a==="start"){syncPc();for(const p of G.players)p.score=0;G.round=0;G.used=[];startRound()}
-  else if(a==="pc"){G.settings.pc=b.dataset.pc;syncPc();setSettings()}
+  else if(a==="pc"){G.settings.pc=b.dataset.pc;const pre=PC_PRESET[G.settings.pc];if(pre){G.settings.secs=pre.secs;if(pre.cats)G.settings.cats=pre.cats.slice()}syncPc();setSettings()}
   else if(a==="inv"){const k=b.dataset.pid+"|"+b.dataset.cat;if(G.invalid[k])delete G.invalid[k];else G.invalid[k]=true;sync()}
   else if(a==="next"){if(G.phase==="review")commitRound()}
   else if(a==="again")newGame();
