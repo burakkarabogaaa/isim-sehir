@@ -10,108 +10,47 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="İsim Şehir">
-<meta name="theme-color" content="#eef3fa" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#16302b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3efe6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1530" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="../theme.css">
 <style>
-/* Düzen: tek sütun, telefon öncelikli. Aydınlık tema kareli defter, karanlık tema kara tahta. */
-:root{
-  --paper:#eef3fa; --grid:#d3deee; --card:#ffffff; --ink:#1b2a57; --soft:#5b6a94;
-  --line:#c3d0e6; --margin:#d8413a; --accent:#1f3a8a; --on-accent:#ffffff;
-  --good:#1d7a4f; --bad:#b3322c; --mark:#ffe27a; --mark-ink:#3d2f00;
-  --display:Georgia,"Times New Roman",serif;
-  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --paper:#16302b; --grid:#1d3b35; --card:#1e3d37; --ink:#eef4ec; --soft:#a9c2b8;
-    --line:#35584f; --margin:#f08a7c; --accent:#f3e9a6; --on-accent:#16302b;
-    --good:#8fe0b0; --bad:#ff9d93; --mark:#f3e9a6; --mark-ink:#16302b;
-    color-scheme:dark;
-  }
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; font:16px/1.45 var(--body); color:var(--ink); background-color:var(--paper);
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:22px 22px; -webkit-text-size-adjust:100%;
-}
-#app{
-  max-width:560px; margin:0 auto; min-height:100%;
-  padding-top:calc(14px + env(safe-area-inset-top,0px));
-  padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
-  display:flex; flex-direction:column; gap:14px;
-}
-h1,h2,h3,p{margin:0}
-h1{font:700 2.1rem/1.05 var(--display); letter-spacing:-.01em; text-wrap:balance}
-h2{font:700 1.05rem/1.2 var(--body)}
-.sub{color:var(--soft); font-size:.95rem}
-.card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px}
-.sheet{border-left:3px solid var(--margin)}
-.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-.grow{flex:1 1 0; min-width:0}
-label{font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
-.field{display:flex; flex-direction:column; gap:5px}
-input[type=text],select{
-  width:100%; font:inherit; font-size:1.05rem; color:var(--ink); background:var(--card);
-  border:1.5px solid var(--line); border-radius:8px; padding:11px 12px; min-height:48px;
-}
-input[type=text]:focus,select:focus,button:focus-visible{outline:3px solid var(--mark); outline-offset:1px; border-color:var(--accent)}
-input:disabled{opacity:.65}
-button{font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
-.btn{
-  min-height:50px; padding:12px 18px; border-radius:8px; border:1.5px solid var(--accent);
-  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:1.05rem; width:100%;
-}
-.btn.ghost{background:transparent; color:var(--accent)}
-.btn.small{min-height:40px; padding:8px 12px; font-size:.92rem; width:auto}
-.btn:disabled{opacity:.45; cursor:not-allowed}
-.top{display:flex; align-items:center; gap:10px; justify-content:space-between}
-.code{font:700 1.05rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.18em}
-.pill{display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; padding:4px 9px; border-radius:99px; border:1px solid var(--line); color:var(--soft); background:var(--card)}
-.dot{width:8px; height:8px; border-radius:50%; background:var(--good)}
-.dot.off{background:var(--bad)}
-.bigcode{font:700 2.6rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.2em; text-align:center}
-.qr{align-self:center; background:#fff; padding:10px; border-radius:8px; line-height:0}
-.qr svg{width:170px; height:170px; display:block}
-.players{display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0}
-.players li{padding:6px 11px; border-radius:99px; border:1px solid var(--line); background:var(--paper); font-weight:600; font-size:.95rem; display:flex; gap:6px; align-items:center; max-width:100%; overflow-wrap:anywhere}
-.players li.off{opacity:.5}
-.chips{display:flex; flex-wrap:wrap; gap:8px}
-.chip{min-height:40px; padding:7px 13px; border-radius:99px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:600}
-.chip[aria-pressed=true]{background:var(--mark); color:var(--mark-ink); border-color:var(--mark)}
-.letterbox{display:flex; align-items:center; gap:16px}
+/* sayfaya özel: harf kartı, süre halkası, cevap tablosu */
+.letterbox{display:flex; align-items:center; gap:18px}
 .letter{
-  width:104px; height:104px; flex:none; border-radius:10px; background:var(--mark); color:var(--mark-ink);
-  font:700 4.4rem/104px var(--display); text-align:center; transform:rotate(-3deg);
+  width:108px; height:108px; flex:none; border-radius:18px; perspective:600px;
+  background:linear-gradient(145deg,var(--gold-2),var(--gold)); color:var(--gold-ink);
+  font:700 4.6rem/108px var(--display); text-align:center; transform:rotate(-4deg);
+  box-shadow:var(--glow), inset 0 -6px 0 rgba(0,0,0,.08);
+  animation:flip .8s var(--spring) both;
 }
-.timer{font:700 2.3rem/1 var(--body); font-variant-numeric:tabular-nums}
-.timer.low{color:var(--bad)}
-.banner{background:var(--mark); color:var(--mark-ink); border-radius:8px; padding:10px 12px; font-weight:700; text-align:center}
-.err{color:var(--bad); font-weight:600}
-a{color:var(--accent)}
-table{width:100%; border-collapse:collapse}
-td,th{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; overflow-wrap:anywhere}
-th{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
-td.pts,th.pts{text-align:right; font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap; width:3.2em}
-td.who{width:34%; font-weight:600}
+@keyframes flip{0%{transform:rotate(-4deg) rotateY(90deg) scale(.7); opacity:0}60%{opacity:1}100%{transform:rotate(-4deg) rotateY(0) scale(1)}}
+.ring{position:relative; width:84px; height:84px; flex:none}
+.ring svg{width:84px; height:84px; transform:rotate(-90deg)}
+.ring circle{fill:none; stroke-width:7; stroke-linecap:round}
+.ring .track{stroke:var(--line)}
+.ring .bar{stroke:var(--accent); stroke-dasharray:226; transition:stroke-dashoffset .25s linear, stroke .3s}
+.ring.low .bar{stroke:var(--bad)}
+.ring .num{position:absolute; inset:0; display:grid; place-items:center; font:800 1.35rem/1 var(--body); font-variant-numeric:tabular-nums}
+.ring.low .num{color:var(--bad); animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.12)}}
+#answers input{font-weight:700}
+#answers .field{animation:rise .45s var(--ease) both; animation-delay:calc(var(--i,0)*50ms)}
+td.who{width:34%; font-weight:700}
 tr.zero .ans{text-decoration:line-through; color:var(--soft)}
 tr.zero .pts{color:var(--bad)}
 tr.full .pts{color:var(--good)}
-.x{min-width:40px; min-height:40px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:700}
+.x{min-width:40px; min-height:40px; border-radius:var(--r-s); border:1.5px solid var(--line-2); background:var(--card-solid); color:var(--ink); font-weight:800}
 td.act{width:48px; text-align:right}
-.rank td:first-child{width:2.2em; font-weight:700; color:var(--soft)}
-.rank tr.me td{background:color-mix(in srgb,var(--mark) 35%,transparent)}
-.center{text-align:center}
-@media (prefers-reduced-motion:no-preference){ .letter{animation:pop .35s ease-out} @keyframes pop{from{transform:rotate(8deg) scale(.6)}to{transform:rotate(-3deg) scale(1)}} }
+.winner{font-size:2.6rem; background:linear-gradient(135deg,var(--gold),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; animation:pop-in .7s var(--spring) both}
+.trophy{font-size:3rem; line-height:1; animation:float 3s ease-in-out infinite}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../fx.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 "use strict";
@@ -119,6 +58,31 @@ td.act{width:48px; text-align:right}
 const LETTERS=[..."ABCÇDEFGHIİKLMNOÖPRSŞTUÜVYZ"];
 const BASE_CATS=["İsim","Şehir","Hayvan","Bitki","Eşya","Ülke","Ünlü","Meslek","Yemek","Film / Dizi","Marka"];
 const DEFAULT_CATS=["İsim","Şehir","Hayvan","Bitki","Eşya","Ülke"];
+/* Bilgisayarın sözlüğü: kategori → harf → cevaplar. Listede olmayan harf/kategori için bilgisayar boş bırakır. */
+const PC_WORDS={
+ "isim":{A:["Ali","Ayşe","Ahmet"],B:["Burak","Berna","Barış"],C:["Can","Cem","Ceren"],Ç:["Çağla","Çetin"],D:["Deniz","Derya","Doğan"],E:["Elif","Emre","Ece"],F:["Fatma","Fırat"],G:["Gizem","Gökhan"],H:["Hasan","Hülya"],I:["Işık","Irmak"],İ:["İrem","İsmail"],K:["Kerem","Kaan"],L:["Leyla","Levent"],M:["Mehmet","Merve"],N:["Nazlı","Nihat"],O:["Onur","Okan"],Ö:["Özge","Ömer"],P:["Pınar","Pelin"],R:["Rana","Rıza"],S:["Selin","Serkan"],Ş:["Şeyma","Şahin"],T:["Tolga","Tuğçe"],U:["Umut","Ufuk"],Ü:["Ümit","Ülkü"],V:["Volkan","Veli"],Y:["Yasemin","Yusuf"],Z:["Zeynep","Zafer"]},
+ "şehir":{A:["Ankara","Antalya","Adana"],B:["Bursa","Berlin","Bodrum"],C:["Cenevre","Cezayir"],Ç:["Çanakkale","Çorum"],D:["Denizli","Diyarbakır"],E:["Edirne","Erzurum","Eskişehir"],F:["Fethiye","Floransa"],G:["Girne","Gazimağusa","Gaziantep"],H:["Hatay","Hamburg"],I:["Isparta","Iğdır"],İ:["İstanbul","İzmir","İskele"],K:["Konya","Kayseri","Kahire"],L:["Lefkoşa","Londra","Lizbon"],M:["Mersin","Madrid","Muğla"],N:["Niğde","Nevşehir","Napoli"],O:["Ordu","Oslo"],Ö:["Ödemiş"],P:["Paris","Prag"],R:["Rize","Roma"],S:["Samsun","Sivas","Sidney"],Ş:["Şanlıurfa","Şırnak"],T:["Trabzon","Tokyo","Tekirdağ"],U:["Uşak","Urla"],Ü:["Ürgüp","Ünye"],V:["Van","Viyana","Venedik"],Y:["Yalova","Yozgat"],Z:["Zonguldak","Zürih"]},
+ "hayvan":{A:["Aslan","Ayı","At"],B:["Balina","Baykuş","Balık"],C:["Ceylan","Civciv"],Ç:["Çita","Çakal"],D:["Deve","Domuz","Deniz atı"],E:["Eşek","Ejder balığı"],F:["Fil","Fare","Flamingo"],G:["Geyik","Gergedan"],H:["Horoz","Hamsi","Hindi"],I:["Istakoz"],İ:["İnek","İguana"],K:["Kedi","Köpek","Kartal"],L:["Leylek","Leopar"],M:["Maymun","Martı"],N:["Nil timsahı"],O:["Orangutan","Okapi"],Ö:["Örümcek","Ördek"],P:["Panda","Papağan","Penguen"],R:["Rakun","Ren geyiği"],S:["Sincap","Serçe","Salyangoz"],Ş:["Şahin","Şempanze"],T:["Tavşan","Timsah","Tilki"],U:["Uğur böceği"],Ü:["Üveyik"],V:["Vaşak","Vatoz"],Y:["Yılan","Yunus"],Z:["Zürafa","Zebra"]},
+ "bitki":{A:["Ayçiçeği","Akasya","Ardıç"],B:["Begonya","Buğday","Biber"],C:["Ceviz","Camgüzeli"],Ç:["Çam","Çınar","Çilek"],D:["Defne","Domates"],E:["Elma","Erik","Eğrelti"],F:["Fesleğen","Fındık"],G:["Gül","Gelincik"],H:["Hanımeli","Havuç"],I:["Ihlamur","Ispanak"],İ:["İncir","İğde"],K:["Kaktüs","Kavak","Karanfil"],L:["Lale","Lavanta","Limon"],M:["Menekşe","Meşe","Mısır"],N:["Nane","Nergis","Nar"],O:["Orkide","Okaliptüs"],Ö:["Öksürük otu"],P:["Papatya","Palmiye","Patates"],R:["Reyhan","Roka"],S:["Sarımsak","Söğüt","Sümbül"],Ş:["Şeftali","Şimşir"],T:["Tere","Turp"],U:["Unutmabeni"],Ü:["Üzüm"],V:["Vişne"],Y:["Yonca","Yasemin"],Z:["Zeytin","Zambak","Zencefil"]},
+ "eşya":{A:["Ayna","Anahtar","Ayakkabı"],B:["Bardak","Bavul","Battaniye"],C:["Cüzdan","Cetvel"],Ç:["Çanta","Çatal","Çekiç"],D:["Dolap","Defter"],E:["Elbise","Eldiven"],F:["Fırça","Fincan","Fener"],G:["Gözlük","Gömlek"],I:["Islık","Izgara"],İ:["İğne","İp"],H:["Halı","Havlu"],K:["Kalem","Kaşık","Koltuk"],L:["Lamba","Leğen"],M:["Masa","Makas","Mum"],N:["Nevresim"],O:["Oyuncak","Ocak"],Ö:["Örtü","Önlük"],P:["Perde","Pantolon"],R:["Radyo","Raf"],S:["Sandalye","Saat","Sepet"],Ş:["Şemsiye","Şapka"],T:["Tabak","Telefon","Tarak"],U:["Uçurtma","Ustura"],Ü:["Ütü"],V:["Vazo","Valiz"],Y:["Yastık","Yorgan"],Z:["Zil","Zımba"]},
+ "ülke":{A:["Almanya","Avustralya","Arjantin"],B:["Brezilya","Belçika","Bulgaristan"],C:["Cezayir","Cibuti"],Ç:["Çin","Çekya"],D:["Danimarka"],E:["Endonezya","Ekvador"],F:["Fransa","Finlandiya","Fas"],G:["Güney Kore","Gürcistan","Gana"],H:["Hindistan","Hollanda","Hırvatistan"],I:["Irak","Iran"],İ:["İtalya","İspanya","İsveç"],K:["Kanada","Kolombiya","Küba"],L:["Lübnan","Letonya"],M:["Meksika","Mısır","Malezya"],N:["Norveç","Nijerya"],O:["Orta Afrika Cumhuriyeti"],Ö:["Özbekistan"],P:["Portekiz","Polonya","Peru"],R:["Rusya","Romanya"],S:["Suriye","Sırbistan"],Ş:["Şili"],T:["Türkiye","Tunus","Tayland"],U:["Ukrayna","Uruguay"],Ü:["Ürdün"],V:["Vietnam","Venezuela"],Y:["Yunanistan","Yemen","Yeni Zelanda"],Z:["Zambiya","Zimbabve"]},
+ "meslek":{A:["Avukat","Aşçı","Asker"],B:["Berber","Boyacı"],C:["Cerrah","Cam ustası"],Ç:["Çiftçi","Çevirmen"],D:["Doktor","Diş hekimi"],E:["Eczacı","Elektrikçi"],F:["Fırıncı","Fotoğrafçı"],G:["Garson","Gazeteci"],H:["Hemşire","Hakim"],I:["Işık tasarımcısı"],İ:["İtfaiyeci","İnşaat mühendisi"],K:["Kasap","Kuaför","Kaptan"],L:["Lokantacı"],M:["Mimar","Marangoz","Muhasebeci"],N:["Noter"],O:["Oyuncu","Operatör"],Ö:["Öğretmen"],P:["Pilot","Polis","Psikolog"],R:["Ressam","Rehber"],S:["Sürücü","Savcı","Sunucu"],Ş:["Şoför","Şarkıcı"],T:["Terzi","Tesisatçı"],U:["Uçak mühendisi"],Ü:["Ürolog"],V:["Veteriner"],Y:["Yazar","Yönetmen"],Z:["Ziraat mühendisi"]},
+ "yemek":{A:["Ayran","Aşure"],B:["Baklava","Börek","Bulgur pilavı"],C:["Cacık"],Ç:["Çorba","Çiğ köfte"],D:["Dolma","Döner"],E:["Et sote","Ekmek kadayıfı"],F:["Fasulye","Fırın sütlaç"],G:["Gözleme","Güllaç"],H:["Hellim","Hamsi tava","Hünkar beğendi"],I:["Ispanak yemeği","Izgara köfte"],İ:["İskender","İmam bayıldı"],K:["Köfte","Kebap","Künefe"],L:["Lahmacun","Lokma"],M:["Mantı","Mercimek çorbası","Molehiya"],N:["Nohut"],O:["Omlet"],Ö:["Örgü peyniri"],P:["Pide","Pilav","Pilavuna"],R:["Revani","Ravioli"],S:["Sarma","Sütlaç","Simit"],Ş:["Şeftali kebabı","Şekerpare"],T:["Tavuk şiş","Tarhana"],U:["Un helvası"],Ü:["Üzüm hoşafı"],V:["Vişne reçeli"],Y:["Yaprak sarma","Yoğurt"],Z:["Zeytinyağlı fasulye","Zerde"]},
+ "marka":{A:["Apple","Adidas","Arçelik"],B:["BMW","Beko","Bosch"],C:["Canon","Coca-Cola"],Ç:["Çaykur"],D:["Dell","Dove"],E:["Eti","Efes"],F:["Ford","Fiat","Ferrari"],G:["Google","Gucci"],H:["Honda","Huawei"],I:["IKEA"],İ:["İş Bankası"],K:["Koton","Kia"],L:["Lego","LC Waikiki","Lenovo"],M:["Mercedes","Mavi","Migros"],N:["Nike","Nestlé","Nokia"],O:["Opel","Oreo"],P:["Pepsi","Puma","Philips"],R:["Renault","Rolex"],S:["Samsung","Sony","Starbucks"],Ş:["Şölen","Şok"],T:["Toyota","Tesla","Turkcell"],U:["Uno","Under Armour"],Ü:["Ülker"],V:["Vodafone","Volvo","Vestel"],Y:["Yapı Kredi","Yamaha"],Z:["Zara","Zorlu"]}
+};
+const PC={id:"pc",name:"Bilgisayar",pc:true};
+function fixSettings(st){st=Object.assign({pc:"off"},st);if(!["off","basit","orta","zor","pro"].includes(st.pc))st.pc=st.pc==="kolay"?"basit":"orta";return st}
+const PC_RATE={basit:0.45,orta:0.7,zor:0.9,pro:1};
+const PC_STOP={basit:[0.9,1.2],orta:[0.65,0.9],zor:[0.45,0.65],pro:[0.3,0.45]};
+const LEVELS=[["off","Yok"],["basit","Basit"],["orta","Orta"],["zor","Zor"],["pro","Pro"]];
+function pcPlan(letter,cats,level){
+  const a={}, L=norm(letter);
+  for(const c of cats){
+    const d=PC_WORDS[norm(c)]; const list=d&&(d[letter]||d[L.toLocaleUpperCase("tr")])||[];
+    a[c]=list.length&&Math.random()<PC_RATE[level]?list[Math.floor(Math.random()*list.length)]:"";
+  }
+  return a;
+}
 const QS=new URLSearchParams(location.search);
 const NS="ish"+(QS.get("p")?"-"+QS.get("p"):"")+"-";   // ?p=2 : aynı cihazda ikinci oyuncu denemek için
 const ls={
@@ -213,6 +177,12 @@ function startRound(){
   G.letter=pool[Math.floor(Math.random()*pool.length)]; G.used.push(G.letter);
   G.round++; G.answers={}; G.invalid={}; G.stopper=null; G.phase="play";
   G.deadline=Date.now()+G.settings.secs*1000;
+  if(G.settings.pc!=="off"){
+    const a=pcPlan(G.letter,G.settings.cats,G.settings.pc); G.answers.pc=a;
+    const full=G.settings.cats.every(c=>a[c]);
+    const f=PC_STOP[G.settings.pc]||PC_STOP.orta;
+    G.pcStopAt=full?Date.now()+G.settings.secs*1000*(f[0]+Math.random()*(f[1]-f[0])):0;
+  }else G.pcStopAt=0;
   sync();
 }
 function endRound(){
@@ -226,7 +196,7 @@ function commitRound(){
 }
 function newGame(){
   for(const p of G.players)p.score=0;
-  G.players=G.players.filter(p=>p.online||p.id===G.hostId);
+  G.players=G.players.filter(p=>p.online||p.id===G.hostId||p.pc);
   G.round=0;G.used=[];G.answers={};G.invalid={};G.letter="";G.phase="lobby";sync();
 }
 function openHost(resume,idx){
@@ -262,7 +232,7 @@ function openHost(resume,idx){
 }
 function createRoom(name){
   G={code:rid(4)+"1",phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
-     settings:ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:5}),
+     settings:fixSettings(ls.get("settings",{cats:DEFAULT_CATS.slice(),secs:90,rounds:5})),
      round:0,letter:"",used:[],answers:{},invalid:{},stopper:null,deadline:0,v:0};
   everConnected=false; openHost(false,0);
 }
@@ -309,7 +279,7 @@ function leave(msg){
   }catch(e){}}
   mq=null; roomCode="";
   if(isHost&&!msg)ls.del("host");
-  G=null;S=null;isHost=false;net="idle";everConnected=false;homeError=msg||"";
+  G=null;S=null;isHost=false;net="idle";everConnected=false;menuOpen=false;homeError=msg||"";
   if(location.search.includes("oda=")){try{history.replaceState(null,"",location.pathname+(QS.get("p")?"?p="+QS.get("p"):""))}catch(e){}}
   render();
 }
@@ -337,14 +307,14 @@ function apply(s){
 const app=document.getElementById("app");
 let lastHTML="";
 function me(){return S&&S.players.find(p=>p.id===myId)}
-function nameOf(id){const p=S.players.find(x=>x.id===id);return p?p.name:"Biri"}
+function nameOf(id){const p=S.players.find(x=>x.id===id);return p?p.name:id==="pc"?"Bilgisayar":"Biri"}
 function joinLink(){return location.origin+location.pathname+"?oda="+S.code}
 
 function viewHome(){
   const last=ls.get("last",{}), saved=ls.get("host",null), urlCode=(QS.get("oda")||"").toUpperCase();
   const canResume=saved&&saved.hostId===myId&&/^[A-Z0-9]{4}[1-3]$/.test(saved.code||"")&&Date.now()-saved.saved<3*3600e3;
   return `
-  <header><h1>İsim Şehir Hayvan</h1><p class="sub">Herkes kendi telefonundan oynar. Bir kişi oda açar, diğerleri kodla ya da QR ile katılır.</p></header>
+  <header><h1>İsim Şehir Hayvan</h1><p class="sub">Herkes kendi telefonundan oynar. Bir kişi oda açar, diğerleri kodla ya da QR ile katılır. Tek başına bilgisayara karşı da oynanır.</p></header>
   ${homeError?`<p class="err" role="alert">${esc(homeError)}</p>`:""}
   ${typeof mqtt==="undefined"?`<p class="err" role="alert">Bağlantı kütüphanesi yüklenemedi. İnterneti kontrol edip sayfayı yenile.</p>`:""}
   <section class="card sheet">
@@ -358,14 +328,31 @@ function viewHome(){
   </section>
   <p class="sub center"><a href="../">Tüm oyunlar</a> · <a href="../asmaca/">Adam Asmaca</a></p>`;
 }
+let menuOpen=false;
+function roomMenu(){
+  if(!menuOpen)return "";
+  return `<div class="scrim" data-act="menu-close"><div class="menu" role="dialog" aria-label="Oda menüsü" data-stop>
+    <div class="grip"></div>
+    <p class="sub center">Arkadaşların bu kodla katılsın</p>
+    <div class="bigcode">${esc(S.code)}</div>
+    ${qrSvg()}
+    <div class="actions">
+      <button class="btn gold" data-act="share">Katılma linkini paylaş</button>
+      <button class="btn ghost" data-act="copycode">Kodu kopyala</button>
+      <p class="sub center" id="sharemsg" hidden></p>
+      <button class="btn ghost danger" data-act="leave">${isHost?"Odayı kapat":"Odadan çık"}</button>
+      <button class="btn ghost" data-act="menu-close">Kapat</button>
+    </div>
+  </div></div>`;
+}
 function topBar(){
-  return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>
-  <span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
-  <button class="btn ghost small" data-act="leave">${isHost?"Odayı kapat":"Çık"}</button></div>
+  return `<div class="top"><button class="pill btn-pill" data-act="menu" aria-haspopup="dialog" aria-expanded="${menuOpen}"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span> ▾</button>
+  <span class="pill">${S.players.filter(p=>p.online&&!p.pc).length} oyuncu</span>
+</div>${roomMenu()}
   ${net!=="ok"?`<div class="banner" role="status">${isHost||!mq||!mq.connected?"Bağlantı koptu, yeniden bağlanılıyor…":"Oda sahibine ulaşılamıyor. Onun oyun ekranı açık olmalı."}</div>`:""}`;
 }
 function playerList(){
-  return `<ul class="players">${S.players.map(p=>`<li class="${p.online?"":"off"}">${esc(p.name)}${p.id===S.hostId?" ★":""}${p.id===myId?" (sen)":""}</li>`).join("")}</ul>`;
+  return `<ul class="players">${S.players.map(p=>`<li class="${p.online?"":"off"}">${esc(p.name)}${p.pc?" ⌨":""}${p.id===S.hostId?" ★":""}${p.id===myId?" (sen)":""}</li>`).join("")}</ul>`;
 }
 function qrSvg(){
   try{ if(typeof qrcode!=="function")return ""; const q=qrcode(0,"M"); q.addData(joinLink()); q.make();
@@ -378,23 +365,20 @@ function viewLobby(){
       <h2>Kategoriler</h2>
       <div class="chips">${cats.map(c=>`<button class="chip" data-act="cat" data-cat="${esc(c)}" aria-pressed="${st.cats.includes(c)}">${esc(c)}</button>`).join("")}</div>
       <div class="row"><div class="grow"><input type="text" id="newcat" maxlength="18" placeholder="Kendi kategorin"></div><button class="btn ghost small" data-act="addcat">Ekle</button></div>
+      <h2>Bilgisayar rakip</h2>
+      <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="pc" data-pc="${k}" aria-pressed="${(st.pc||"off")===k}">${t}</button>`).join("")}</div>
+      <p class="sub">${st.pc==="off"?"Sadece oyuncular yarışır.":({basit:"Bilgisayar kutuların yarısını doldurur, acele etmez.",orta:"Bilgisayar çoğu kutuyu doldurur, sürenin ortasında bitirebilir.",zor:"Bilgisayar neredeyse her kutuyu doldurur ve erken bitirir.",pro:"Bilgisayar bildiği her kutuyu doldurur ve çok erken bitirir. Kendi eklediğin kategorileri bilmez."})[st.pc]}</p>
       <div class="row">
         <div class="field grow"><label for="secs">Süre</label><select id="secs">${[45,60,90,120,180].map(v=>`<option value="${v}" ${v===st.secs?"selected":""}>${v} saniye</option>`).join("")}</select></div>
         <div class="field grow"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10,15].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
       </div>
     </section>
     <button class="btn" data-act="start" ${st.cats.length?"":"disabled"}>Oyunu başlat</button>`
-  :`<section class="card"><h2>Oyun ayarları</h2><p>${esc(st.cats.join(", "))}</p><p class="sub">${st.secs} saniye · ${st.rounds} tur</p></section>
+  :`<section class="card"><h2>Oyun ayarları</h2><p>${esc(st.cats.join(", "))}</p><p class="sub">${st.secs} saniye · ${st.rounds} tur${st.pc&&st.pc!=="off"?" · Bilgisayar rakip ("+st.pc+")":""}</p></section>
     <p class="sub center">Oda sahibinin oyunu başlatması bekleniyor…</p>`;
   return topBar()+`
-  <section class="card sheet">
-    <p class="sub center">Arkadaşların bu kodla katılsın</p>
-    <div class="bigcode">${esc(S.code)}</div>
-    ${qrSvg()}
-    <button class="btn ghost" data-act="share">Katılma linkini paylaş</button>
-    <p class="sub center" id="sharemsg" hidden></p>
-  </section>
-  <section class="card"><h2>Oyuncular (${S.players.length})</h2>${playerList()}</section>
+  <section class="card sheet"><div class="top"><h2>Oyuncular (${S.players.length})</h2><button class="btn ghost small" data-act="menu">Davet et</button></div>${playerList()}
+    <p class="sub">Kod, QR ve katılma linki üstteki oda kodunun altındaki menüde.</p></section>
   ${settings}`;
 }
 function viewPlay(){
@@ -403,23 +387,24 @@ function viewPlay(){
   <section class="card sheet">
     <div class="letterbox">
       <div class="letter" aria-label="Harf ${esc(S.letter)}">${esc(S.letter)}</div>
-      <div><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p><div class="timer" id="timer" aria-live="off">–</div></div>
+      <div class="grow"><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p><h2>${S.settings.cats.length} kategori</h2><p class="sub">${S.settings.pc&&S.settings.pc!=="off"?"Bilgisayar da yazıyor":"Herkes yazıyor"}</p></div>
+      <div class="ring" id="ring"><svg viewBox="0 0 84 84"><circle class="track" cx="42" cy="42" r="36"/><circle class="bar" id="bar" cx="42" cy="42" r="36"/></svg><div class="num" id="timer">–</div></div>
     </div>
     ${stopped?`<div class="banner" role="status">${S.stopper?esc(nameOf(S.stopper))+" bitirdi!":"Süre doldu!"} Cevaplar toplanıyor…</div>`:""}
   </section>
   <section class="card" id="answers">
-    ${S.settings.cats.map((c,i)=>`<div class="field"><label for="a${i}">${esc(c)}</label><input type="text" id="a${i}" data-cat="${esc(c)}" maxlength="40" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="${esc(S.letter)}…" ${stopped?"disabled":""}></div>`).join("")}
+    ${S.settings.cats.map((c,i)=>`<div class="field" style="--i:${i}"><label for="a${i}">${esc(c)}</label><input type="text" id="a${i}" data-cat="${esc(c)}" maxlength="40" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="${esc(S.letter)}…" ${stopped?"disabled":""}></div>`).join("")}
   </section>
-  ${stopped?"":`<button class="btn" id="stopbtn" data-act="stop">Bitirdim!</button><p class="sub center">Bütün kutuları doldurunca turu herkes için bitirebilirsin.</p>`}`;
+  ${stopped?"":`<button class="btn gold" id="stopbtn" data-act="stop">Bitirdim!</button><p class="sub center">Bütün kutuları doldurunca turu herkes için bitirebilirsin.</p>`}`;
 }
 function viewReview(){
   const sc=scoreRound(S), final=S.round>=S.settings.rounds;
   const why={boş:"boş",harf:"yanlış harf",geçersiz:"geçersiz"};
   const cats=S.settings.cats.map(cat=>`
     <section class="card"><h2>${esc(cat)}</h2>
-    <table><tbody>${S.players.map(p=>{
+    <table><tbody>${S.players.map((p,i)=>{
       const c=sc.cells[p.id][cat], canToggle=isHost&&c.why!=="boş"&&c.why!=="harf";
-      return `<tr class="${c.pts===0?"zero":c.pts===10?"full":""}"><td class="who">${esc(p.name)}</td>
+      return `<tr style="--i:${i}" class="${c.pts===0?"zero":c.pts===10?"full":""}"><td class="who">${esc(p.name)}</td>
         <td><span class="ans">${c.raw?esc(c.raw):"—"}</span>${c.why&&c.why!=="boş"?` <span class="sub">(${why[c.why]})</span>`:""}</td>
         <td class="pts">${c.pts}</td>
         ${isHost?`<td class="act">${canToggle?`<button class="x" data-act="inv" data-pid="${esc(p.id)}" data-cat="${esc(cat)}" aria-label="${c.why?"Cevabı geri al":"Cevabı geçersiz say"}">${c.why?"↺":"✕"}</button>`:""}</td>`:""}</tr>`}).join("")}
@@ -431,16 +416,16 @@ function viewReview(){
   ${cats}
   <section class="card"><h2>Puan durumu</h2>
     <table class="rank"><thead><tr><th></th><th>Oyuncu</th><th class="pts">Tur</th><th class="pts">Toplam</th></tr></thead>
-    <tbody>${board.map((b,i)=>`<tr class="${b.p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(b.p.name)}</td><td class="pts">+${b.r}</td><td class="pts">${b.t}</td></tr>`).join("")}</tbody></table>
+    <tbody>${board.map((b,i)=>`<tr style="--i:${i}" class="${b.p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(b.p.name)}</td><td class="pts">+${b.r}</td><td class="pts">${b.t}</td></tr>`).join("")}</tbody></table>
   </section>
   ${isHost?`<button class="btn" data-act="next">${final?"Sonuçları göster":"Sonraki tur"}</button>`:`<p class="sub center">Oda sahibi cevapları kontrol ediyor…</p>`}`;
 }
 function viewFinal(){
   const board=S.players.slice().sort((a,b)=>b.score-a.score), top=board[0];
   return topBar()+`
-  <section class="card sheet center"><p class="sub">Oyun bitti</p><h1>${top?esc(top.name):""} kazandı</h1><p class="sub">${top?top.score:0} puan</p></section>
+  <section class="card sheet center"><div class="trophy" aria-hidden="true">🏆</div><p class="sub">Oyun bitti</p><h1 class="winner">${top?esc(top.name):""}</h1><p class="sub">${top?top.score:0} puanla kazandı</p></section>
   <section class="card"><h2>Sıralama</h2>
-    <table class="rank"><tbody>${board.map((p,i)=>`<tr class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
+    <table class="rank"><tbody>${board.map((p,i)=>`<tr style="--i:${i}" class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
   </section>
   ${isHost?`<button class="btn" data-act="again">Yeni oyun</button>`:`<p class="sub center">Oda sahibi yeni oyun başlatabilir.</p>`}`;
 }
@@ -459,14 +444,14 @@ function render(){
     const act=document.activeElement, keep=act&&act.id?{id:act.id,v:act.value,s:act.selectionStart}:null;
     const vals={};for(const el of app.querySelectorAll("input[type=text]"))if(el.id)vals[el.id]=el.value;
     const samePhase=app.dataset.screen===(S?S.phase+"#"+S.round:"home");
-    app.innerHTML=html; lastHTML=html; app.dataset.screen=S?S.phase+"#"+S.round:"home";
+    app.classList.toggle("still",samePhase); app.innerHTML=html; lastHTML=html; app.dataset.screen=S?S.phase+"#"+S.round:"home";
     if(S&&(S.phase==="play"||S.phase==="collect")){
       for(const el of app.querySelectorAll("#answers input"))el.value=draft[el.dataset.cat]||"";
     }else if(samePhase){
       for(const id in vals){const el=document.getElementById(id);if(el&&!el.dataset.cat)el.value=vals[id]}
     }
     if(keep){const el=document.getElementById(keep.id);if(el&&!el.disabled){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
-    if(!samePhase)window.scrollTo(0,0);
+    if(!samePhase){window.scrollTo(0,0); if(S&&S.phase==="final"&&window.FX)FX.confetti()}
   }
   tick();
 }
@@ -476,7 +461,7 @@ function tick(){
     lastPing=now; let changed=false;
     pubMsg("st",{t:"ping"});
     if(now-hostUpSince>16000)for(const p of G.players){
-      if(p.id!==myId&&p.online&&now-(seen.get(p.id)||0)>15000){p.online=false;changed=true}
+      if(p.id!==myId&&!p.pc&&p.online&&now-(seen.get(p.id)||0)>15000){p.online=false;changed=true}
     }
     if(changed)sync();
   }
@@ -489,7 +474,8 @@ function tick(){
     }
   }
   if(isHost&&G){
-    if(G.phase==="play"&&Date.now()>=G.deadline)endRound();
+    if(G.phase==="play"&&G.pcStopAt&&Date.now()>=G.pcStopAt){G.stopper="pc";endRound()}
+    else if(G.phase==="play"&&Date.now()>=G.deadline)endRound();
     else if(G.phase==="collect"&&Date.now()-G.collectAt>=1500){G.phase="review";sync()}
   }
   if(!S||S.phase!=="play"&&S.phase!=="collect")return;
@@ -498,7 +484,9 @@ function tick(){
     const left=S.phase==="collect"?0:Math.max(0,Math.ceil((deadlineLocal-Date.now())/1000));
     const txt=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
     if(t.textContent!==txt)t.textContent=txt;
-    t.classList.toggle("low",left<=10);
+    const ring=document.getElementById("ring"),bar=document.getElementById("bar");
+    if(ring)ring.classList.toggle("low",left<=10&&S.phase==="play");
+    if(bar){const total=S.settings.secs*1000,rem=S.phase==="collect"?0:Math.max(0,deadlineLocal-Date.now());bar.style.strokeDashoffset=(226*(1-rem/total)).toFixed(1)}
   }
   const b=document.getElementById("stopbtn");
   if(b)b.disabled=sentStop||!S.settings.cats.every(c=>norm(draft[c]));
@@ -512,6 +500,11 @@ function readName(){
   ls.set("name",n);homeError="";return n;
 }
 function setSettings(){ls.set("settings",G.settings);sync()}
+function syncPc(){
+  const on=G.settings.pc!=="off", has=G.players.some(p=>p.pc);
+  if(on&&!has)G.players.push(Object.assign({score:0,online:true},PC));
+  if(!on&&has)G.players=G.players.filter(p=>!p.pc);
+}
 document.addEventListener("click",ev=>{
   const b=ev.target.closest("[data-act]"); if(!b||b.disabled)return;
   const a=b.dataset.act;
@@ -524,9 +517,15 @@ document.addEventListener("click",ev=>{
   }
   else if(a==="resume"){
     const saved=ls.get("host",null);if(!saved)return;
-    G=saved;delete G.saved;if(!/^[A-Z0-9]{4}[1-3]$/.test(G.code||"")){ls.del("host");G=null;render();return}G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
+    G=saved;delete G.saved;G.settings=fixSettings(G.settings);if(!/^[A-Z0-9]{4}[1-3]$/.test(G.code||"")){ls.del("host");G=null;render();return}G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
   }
-  else if(a==="leave")leave("");
+  else if(a==="leave"){menuOpen=false;leave("")}
+  else if(a==="menu"){menuOpen=true;render()}
+  else if(a==="menu-close"){if(ev.target.closest("[data-stop]")&&!ev.target.closest('[data-act="menu-close"].btn'))return;menuOpen=false;render()}
+  else if(a==="copycode"){
+    const msg=document.getElementById("sharemsg"),done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
+    if(navigator.clipboard)navigator.clipboard.writeText(S.code).then(()=>done("Kod kopyalandı."),()=>done(S.code));else done(S.code);
+  }
   else if(a==="share"){
     const url=joinLink(),msg=document.getElementById("sharemsg");
     const done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
@@ -534,14 +533,15 @@ document.addEventListener("click",ev=>{
     else if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>done("Link kopyalandı."),()=>done(url));
     else done(url);
   }
-  else if(a==="stop"){sentStop=true;clearTimeout(draftTimer);sendDraft();send({t:"stop",round:S.round});tick()}
+  else if(a==="stop"){if(window.FX)FX.burst(b);sentStop=true;clearTimeout(draftTimer);sendDraft();send({t:"stop",round:S.round});tick()}
   else if(!isHost||!G)return;
   else if(a==="cat"){const c=b.dataset.cat,i=G.settings.cats.indexOf(c);if(i>=0)G.settings.cats.splice(i,1);else G.settings.cats.push(c);setSettings()}
   else if(a==="addcat"){
     const el=document.getElementById("newcat"),c=el.value.trim().slice(0,18);
     if(c&&!G.settings.cats.some(x=>norm(x)===norm(c))){G.settings.cats.push(c);el.value="";setSettings()}
   }
-  else if(a==="start"){for(const p of G.players)p.score=0;G.round=0;G.used=[];startRound()}
+  else if(a==="start"){syncPc();for(const p of G.players)p.score=0;G.round=0;G.used=[];startRound()}
+  else if(a==="pc"){G.settings.pc=b.dataset.pc;syncPc();setSettings()}
   else if(a==="inv"){const k=b.dataset.pid+"|"+b.dataset.cat;if(G.invalid[k])delete G.invalid[k];else G.invalid[k]=true;sync()}
   else if(a==="next"){if(G.phase==="review")commitRound()}
   else if(a==="again")newGame();

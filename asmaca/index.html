@@ -10,121 +10,57 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Adam Asmaca">
-<meta name="theme-color" content="#eef3fa" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#16302b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3efe6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1530" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="../theme.css">
 <style>
-/* Düzen: tek sütun, telefon öncelikli. Aydınlık tema kareli defter, karanlık tema kara tahta. */
-:root{
-  --paper:#eef3fa; --grid:#d3deee; --card:#ffffff; --ink:#1b2a57; --soft:#5b6a94;
-  --line:#c3d0e6; --margin:#d8413a; --accent:#1f3a8a; --on-accent:#ffffff;
-  --good:#1d7a4f; --bad:#b3322c; --mark:#ffe27a; --mark-ink:#3d2f00;
-  --display:Georgia,"Times New Roman",serif;
-  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color-scheme:light;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --paper:#16302b; --grid:#1d3b35; --card:#1e3d37; --ink:#eef4ec; --soft:#a9c2b8;
-    --line:#35584f; --margin:#f08a7c; --accent:#f3e9a6; --on-accent:#16302b;
-    --good:#8fe0b0; --bad:#ff9d93; --mark:#f3e9a6; --mark-ink:#16302b;
-    color-scheme:dark;
-  }
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; font:16px/1.45 var(--body); color:var(--ink); background-color:var(--paper);
-  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-  background-size:22px 22px; -webkit-text-size-adjust:100%;
-}
-#app{
-  max-width:560px; margin:0 auto; min-height:100%;
-  padding-top:calc(14px + env(safe-area-inset-top,0px));
-  padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
-  display:flex; flex-direction:column; gap:14px;
-}
-h1,h2,h3,p{margin:0}
-h1{font:700 2.1rem/1.05 var(--display); letter-spacing:-.01em; text-wrap:balance}
-h2{font:700 1.05rem/1.2 var(--body)}
-.sub{color:var(--soft); font-size:.95rem}
-a{color:var(--accent)}
-.card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px}
-.sheet{border-left:3px solid var(--margin)}
-.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-.grow{flex:1 1 0; min-width:0}
-label{font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
-.field{display:flex; flex-direction:column; gap:5px}
-input[type=text],select{
-  width:100%; font:inherit; font-size:1.05rem; color:var(--ink); background:var(--card);
-  border:1.5px solid var(--line); border-radius:8px; padding:11px 12px; min-height:48px;
-}
-input[type=text]:focus,select:focus,button:focus-visible{outline:3px solid var(--mark); outline-offset:1px; border-color:var(--accent)}
-button{font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent}
-.btn{
-  min-height:50px; padding:12px 18px; border-radius:8px; border:1.5px solid var(--accent);
-  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:1.05rem; width:100%;
-}
-.btn.ghost{background:transparent; color:var(--accent)}
-.btn.small{min-height:40px; padding:8px 12px; font-size:.92rem; width:auto}
-.btn:disabled{opacity:.45; cursor:not-allowed}
-.top{display:flex; align-items:center; gap:10px; justify-content:space-between}
-.code{font:700 1.05rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.18em}
-.pill{display:inline-flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; padding:4px 9px; border-radius:99px; border:1px solid var(--line); color:var(--soft); background:var(--card)}
-.dot{width:8px; height:8px; border-radius:50%; background:var(--good)}
-.dot.off{background:var(--bad)}
-.bigcode{font:700 2.6rem/1 ui-monospace,Menlo,Consolas,monospace; letter-spacing:.2em; text-align:center}
-.qr{align-self:center; background:#fff; padding:10px; border-radius:8px; line-height:0}
-.qr svg{width:170px; height:170px; display:block}
-.players{display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0}
-.players li{padding:6px 11px; border-radius:99px; border:1px solid var(--line); background:var(--paper); font-weight:600; font-size:.95rem; display:flex; gap:6px; align-items:center; max-width:100%; overflow-wrap:anywhere}
-.players li.off{opacity:.5}
-.players li.turn{background:var(--mark); color:var(--mark-ink); border-color:var(--mark)}
-.banner{background:var(--mark); color:var(--mark-ink); border-radius:8px; padding:10px 12px; font-weight:700; text-align:center}
-.err{color:var(--bad); font-weight:600}
-.center{text-align:center}
-/* darağacı */
-.gallows{display:flex; gap:14px; align-items:center}
-.gallows svg{width:120px; height:140px; flex:none; color:var(--ink)}
-.gallows svg *{stroke:currentColor; stroke-width:3; stroke-linecap:round; fill:none}
-.gallows svg .part{display:none}
-.gallows svg .part.on{display:block}
+/* sayfaya özel: darağacı, kelime kutuları, klavye */
+.gallows{display:flex; gap:16px; align-items:center}
+.gallows svg{width:124px; height:144px; flex:none; color:var(--ink); filter:drop-shadow(0 6px 10px rgba(0,0,0,.12))}
+.gallows svg *{stroke:currentColor; stroke-width:3.2; stroke-linecap:round; fill:none}
+.gallows svg .part{display:none; stroke-dasharray:120; stroke-dashoffset:120}
+.gallows svg .part.on{display:block; animation:draw .6s var(--ease) forwards}
+.gallows svg .part.old{animation:none; stroke-dashoffset:0}
 .gallows svg .rope{stroke:var(--margin)}
+.gallows svg .sway{transform-origin:80px 10px; animation:sway 3.2s ease-in-out infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
 .misses{font-variant-numeric:tabular-nums}
-/* kelime */
-.word{display:flex; flex-wrap:wrap; gap:8px 6px; justify-content:center; padding:6px 0}
-.slot{width:30px; height:40px; border-bottom:3px solid var(--ink); font:700 1.7rem/40px var(--display); text-align:center}
+.lives{display:flex; gap:5px}
+.lives i{width:10px; height:10px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 30%,transparent); transition:background .3s,transform .3s var(--spring)}
+.lives i.off{background:var(--line-2); box-shadow:none; transform:scale(.7)}
+.word{display:flex; flex-wrap:wrap; gap:8px 6px; justify-content:center; padding:8px 0; perspective:500px}
+.slot{width:32px; height:44px; border-bottom:3px solid var(--line-2); font:700 1.8rem/44px var(--display); text-align:center; transition:border-color .3s}
 .slot.gap{border:none; width:14px}
-.slot.on{color:var(--accent)}
-.slot.miss{color:var(--bad)}
+.slot.on{color:var(--accent); border-color:var(--accent); animation:reveal .55s var(--spring) both}
+.slot.miss{color:var(--bad); border-color:var(--bad)}
+@keyframes reveal{0%{transform:rotateX(90deg); opacity:0}100%{transform:none; opacity:1}}
 .keys{display:grid; grid-template-columns:repeat(8,1fr); gap:6px}
-.key{min-height:44px; border-radius:8px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:700; font-size:1.05rem}
+.key{min-height:46px; border-radius:var(--r-s); border:1.5px solid var(--line-2); background:var(--card-solid); color:var(--ink); font-weight:800; font-size:1.05rem; transition:transform .12s var(--spring),background .2s,opacity .2s}
+.key:not(:disabled):active{transform:scale(.88)}
 .key:disabled{opacity:.3}
-.key.hit{background:var(--mark); color:var(--mark-ink); border-color:var(--mark); opacity:1}
-.key.miss{background:transparent; color:var(--bad); text-decoration:line-through; opacity:.7}
-.chips{display:flex; flex-wrap:wrap; gap:8px}
-.chip{min-height:40px; padding:7px 13px; border-radius:99px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font-weight:600}
-.chip[aria-pressed=true]{background:var(--mark); color:var(--mark-ink); border-color:var(--mark)}
-table{width:100%; border-collapse:collapse}
-td,th{padding:8px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle; overflow-wrap:anywhere}
-th{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--soft)}
-td.pts,th.pts{text-align:right; font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap; width:3.2em}
-.rank td:first-child{width:2.2em; font-weight:700; color:var(--soft)}
-.rank tr.me td{background:color-mix(in srgb,var(--mark) 35%,transparent)}
-.secret{font:700 1.4rem/1.2 var(--display); letter-spacing:.12em}
-@media (prefers-reduced-motion:no-preference){ .part.on{animation:draw .35s ease-out} @keyframes draw{from{opacity:0}to{opacity:1}} }
+.key.hit{background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:var(--gold-ink); border-color:transparent; opacity:1}
+.key.miss{background:transparent; color:var(--bad); text-decoration:line-through; opacity:.6}
+.secret{font:700 1.5rem/1.2 var(--display); letter-spacing:.14em}
+.winner{font-size:2.6rem; background:linear-gradient(135deg,var(--gold),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; animation:pop-in .7s var(--spring) both}
+.trophy{font-size:3rem; line-height:1; animation:float 3s ease-in-out infinite}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="../fx.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
 "use strict";
 /* ---------- sabitler ve yardımcılar ---------- */
 const ALPHA=[..."ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ"];
-const MAX_MISS=6;
+const LEVELS=[["basit","Basit"],["orta","Orta"],["zor","Zor"],["pro","Pro"]];
+const LEVEL={basit:{miss:8,hint:true,len:[3,6]},orta:{miss:6,hint:true,len:[3,24]},zor:{miss:5,hint:false,len:[5,24]},pro:{miss:4,hint:false,len:[7,24]}};
+const lvl=st=>LEVEL[st&&st.level]||LEVEL.orta;
+const maxMiss=()=>S?S.maxMiss||6:6;
 const WORDS=[
  ["KEDİ","Hayvan"],["ZÜRAFA","Hayvan"],["PENGUEN","Hayvan"],["KAPLUMBAĞA","Hayvan"],["SİNCAP","Hayvan"],["YUNUS","Hayvan"],["FLAMİNGO","Hayvan"],["KİRPİ","Hayvan"],["BAYKUŞ","Hayvan"],["TİMSAH","Hayvan"],
  ["GİRNE","Şehir"],["GAZİMAĞUSA","Şehir"],["LEFKOŞA","Şehir"],["İSKELE","Şehir"],["GÜZELYURT","Şehir"],["İSTANBUL","Şehir"],["ANTALYA","Şehir"],["TRABZON","Şehir"],["ESKİŞEHİR","Şehir"],["ÇANAKKALE","Şehir"],
@@ -166,7 +102,7 @@ function pubMsg(k,m,qos){ if(mq&&mq.connected&&roomCode){try{mq.publish(topic(ro
 
 /* ---------- oda sahibi: oyun kuralları ---------- */
 function pub(){
-  const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,v:g.v||0,
+  const g=G,s={code:g.code,phase:g.phase,players:g.players,hostId:g.hostId,settings:g.settings,v:g.v||0,maxMiss:lvl(g.settings).miss,
     round:g.round,setter:g.setter,hint:g.hint,masked:g.masked,guessed:g.guessed,misses:g.misses,turn:g.turn,result:g.result,lastWrong:g.lastWrong||null};
   if(g.phase==="reveal"||g.phase==="final")s.word=g.word;
   return s;
@@ -185,7 +121,7 @@ function nextTurn(from){
   G.turn=gs[(i+1)%gs.length].id;
 }
 function setWord(word,hint){
-  G.word=word; G.hint=(hint||"").slice(0,30);
+  G.word=word; G.hint=lvl(G.settings).hint?(hint||"").slice(0,30):"";
   G.masked=[...word].map(c=>c===" "?" ":null); G.guessed=[]; G.misses=0; G.result=null; G.lastWrong=null; G.phase="play";
   const gs=guessers(); G.turn=gs.length?gs[Math.floor(Math.random()*gs.length)].id:null;
   sync();
@@ -193,7 +129,9 @@ function setWord(word,hint){
 function beginRound(){
   G.round++; G.result=null; G.word=""; G.masked=[]; G.guessed=[]; G.misses=0; G.turn=null;
   if(G.settings.mode==="pc"||online().length<2){
-    G.setter="pc"; const w=WORDS[Math.floor(Math.random()*WORDS.length)]; setWord(w[0],w[1]);
+    G.setter="pc"; const L=lvl(G.settings);
+    let pool=WORDS.filter(w=>{const n=w[0].replace(/ /g,"").length;return n>=L.len[0]&&n<=L.len[1]}); if(!pool.length)pool=WORDS;
+    const w=pool[Math.floor(Math.random()*pool.length)]; setWord(w[0],L.hint?w[1]:"");
   }else{
     const ps=online(); G.setter=ps[(G.round-1)%ps.length].id; G.phase="set"; sync();
   }
@@ -223,12 +161,12 @@ function hostHandle(m,pid){
     const p=G.players.find(x=>x.id===pid); let n=0;
     [...G.word].forEach((c,i)=>{if(c===l){G.masked[i]=l;n++}});
     if(n){ if(p)p.score+=10*n; if(!G.masked.includes(null)){finishRound(pid);return} }
-    else{ G.misses++; if(G.misses>=MAX_MISS){finishRound(null);return} nextTurn(pid) }
+    else{ G.misses++; if(G.misses>=lvl(G.settings).miss){finishRound(null);return} nextTurn(pid) }
     sync();
   }else if(m.t==="w"){
     if(G.phase!=="play"||pid!==G.turn)return;
     if(up(m.w)===G.word){finishRound(pid);return}
-    G.misses++; if(G.misses>=MAX_MISS){finishRound(null);return}
+    G.misses++; if(G.misses>=lvl(G.settings).miss){finishRound(null);return}
     nextTurn(pid); G.lastWrong={pid,w:up(m.w).slice(0,24)}; sync();
   }
 }
@@ -278,7 +216,7 @@ function openHost(resume,idx){
 }
 function createRoom(name){
   G={code:rid(4)+"1",phase:"lobby",hostId:myId,players:[{id:myId,name,score:0,online:true}],
-     settings:ls.get("settings",{rounds:5,mode:"sira"}),round:0,setter:null,word:"",hint:"",masked:[],guessed:[],misses:0,turn:null,result:null,v:0};
+     settings:Object.assign({level:"orta"},ls.get("settings",{rounds:5,mode:"sira"})),round:0,setter:null,word:"",hint:"",masked:[],guessed:[],misses:0,turn:null,result:null,v:0};
   everConnected=false; openHost(false,0);
 }
 function hello(){lastHello=Date.now(); pubMsg("in",{t:"join",pid:myId,name:myName},1)}
@@ -322,7 +260,7 @@ function leave(msg){
   }catch(e){}}
   mq=null; roomCode="";
   if(isHost&&!msg)ls.del("host");
-  G=null;S=null;isHost=false;net="idle";everConnected=false;homeError=msg||"";mySecret="";
+  G=null;S=null;isHost=false;net="idle";everConnected=false;menuOpen=false;homeError=msg||"";mySecret="";
   if(location.search.includes("oda=")){try{history.replaceState(null,"",location.pathname+(QS.get("p")?"?p="+QS.get("p"):""))}catch(e){}}
   render();
 }
@@ -362,10 +300,27 @@ function viewHome(){
   </section>
   <p class="sub center"><a href="../">Tüm oyunlar</a> · <a href="../isim-sehir-hayvan/">İsim Şehir Hayvan</a></p>`;
 }
+let menuOpen=false;
+function roomMenu(){
+  if(!menuOpen)return "";
+  return `<div class="scrim" data-act="menu-close"><div class="menu" role="dialog" aria-label="Oda menüsü" data-stop>
+    <div class="grip"></div>
+    <p class="sub center">Arkadaşların bu kodla katılsın</p>
+    <div class="bigcode">${esc(S.code)}</div>
+    ${qrSvg()}
+    <div class="actions">
+      <button class="btn gold" data-act="share">Katılma linkini paylaş</button>
+      <button class="btn ghost" data-act="copycode">Kodu kopyala</button>
+      <p class="sub center" id="sharemsg" hidden></p>
+      <button class="btn ghost danger" data-act="leave">${isHost?"Odayı kapat":"Odadan çık"}</button>
+      <button class="btn ghost" data-act="menu-close">Kapat</button>
+    </div>
+  </div></div>`;
+}
 function topBar(){
-  return `<div class="top"><span class="pill"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span></span>
+  return `<div class="top"><button class="pill btn-pill" data-act="menu" aria-haspopup="dialog" aria-expanded="${menuOpen}"><span class="dot ${net==="ok"?"":"off"}"></span>${net==="ok"?"Oda":"Bağlanıyor"} <span class="code">${esc(S.code)}</span> ▾</button>
   <span class="pill">${S.players.filter(p=>p.online).length} oyuncu</span>
-  <button class="btn ghost small" data-act="leave">${isHost?"Odayı kapat":"Çık"}</button></div>
+</div>${roomMenu()}
   ${net!=="ok"?`<div class="banner" role="status">${isHost||!mq||!mq.connected?"Bağlantı koptu, yeniden bağlanılıyor…":"Oda sahibine ulaşılamıyor. Onun oyun ekranı açık olmalı."}</div>`:""}`;
 }
 function playerList(){
@@ -380,41 +335,43 @@ function viewLobby(){
   const settings=isHost?`
     <section class="card">
       <h2>Kelimeyi kim tutsun?</h2>
-      <div class="chips">
-        <button class="chip" data-act="mode" data-mode="sira" aria-pressed="${st.mode==="sira"}">Sırayla oyuncular</button>
-        <button class="chip" data-act="mode" data-mode="pc" aria-pressed="${st.mode==="pc"}">Bilgisayar seçsin</button>
+      <div class="seg">
+        <button data-act="mode" data-mode="sira" aria-pressed="${st.mode==="sira"}">Sırayla oyuncular</button>
+        <button data-act="mode" data-mode="pc" aria-pressed="${st.mode==="pc"}">Bilgisayar seçsin</button>
       </div>
       <p class="sub">${st.mode==="pc"?"Herkes tahmin eder, kelimeler listeden gelir. Tek başına da oynanır.":"Her turda bir oyuncu kelime yazar, diğerleri tahmin eder."}</p>
+      <h2>Zorluk</h2>
+      <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="level" data-level="${k}" aria-pressed="${(st.level||"orta")===k}">${t}</button>`).join("")}</div>
+      <p class="sub">${({basit:"8 can, ipucu var, kısa kelimeler.",orta:"6 can, ipucu var.",zor:"5 can, ipucu yok.",pro:"4 can, ipucu yok, uzun kelimeler."})[st.level||"orta"]}</p>
       <div class="field"><label for="rounds">Tur sayısı</label><select id="rounds">${[3,5,8,10].map(v=>`<option value="${v}" ${v===st.rounds?"selected":""}>${v} tur</option>`).join("")}</select></div>
     </section>
     <button class="btn" data-act="start">Oyunu başlat</button>`
-  :`<section class="card"><h2>Oyun ayarları</h2><p>${st.mode==="pc"?"Kelimeleri bilgisayar seçer":"Kelimeyi sırayla oyuncular tutar"} · ${st.rounds} tur</p></section>
+  :`<section class="card"><h2>Oyun ayarları</h2><p>${st.mode==="pc"?"Kelimeleri bilgisayar seçer":"Kelimeyi sırayla oyuncular tutar"} · ${st.rounds} tur · ${(LEVELS.find(l=>l[0]===(st.level||"orta"))||LEVELS[1])[1]}</p></section>
     <p class="sub center">Oda sahibinin oyunu başlatması bekleniyor…</p>`;
   return topBar()+`
-  <section class="card sheet">
-    <p class="sub center">Arkadaşların bu kodla katılsın</p>
-    <div class="bigcode">${esc(S.code)}</div>
-    ${qrSvg()}
-    <button class="btn ghost" data-act="share">Katılma linkini paylaş</button>
-    <p class="sub center" id="sharemsg" hidden></p>
-  </section>
-  <section class="card"><h2>Oyuncular (${S.players.length})</h2>${playerList()}</section>
+  <section class="card sheet"><div class="top"><h2>Oyuncular (${S.players.length})</h2><button class="btn ghost small" data-act="menu">Davet et</button></div>${playerList()}
+    <p class="sub">Kod, QR ve katılma linki üstteki oda kodunun altındaki menüde.</p></section>
   ${settings}`;
 }
+let shownMiss=0;
 function gallows(n){
+  const mm=maxMiss(), steps=Math.max(0,Math.min(6,Math.round(n/mm*6)));   // can sayısı değişse de 6 parçalı çizim
+  const cls=i=>"part "+(steps>i?(shownMiss>i?"on old":"on"):"");
   const parts=[
-    `<circle class="part ${n>0?"on":""}" cx="80" cy="42" r="11"/>`,
-    `<line class="part ${n>1?"on":""}" x1="80" y1="53" x2="80" y2="92"/>`,
-    `<line class="part ${n>2?"on":""}" x1="80" y1="62" x2="62" y2="80"/>`,
-    `<line class="part ${n>3?"on":""}" x1="80" y1="62" x2="98" y2="80"/>`,
-    `<line class="part ${n>4?"on":""}" x1="80" y1="92" x2="66" y2="118"/>`,
-    `<line class="part ${n>5?"on":""}" x1="80" y1="92" x2="94" y2="118"/>`];
+    `<circle class="${cls(0)}" cx="80" cy="42" r="11"/>`,
+    `<line class="${cls(1)}" x1="80" y1="53" x2="80" y2="92"/>`,
+    `<line class="${cls(2)}" x1="80" y1="62" x2="62" y2="80"/>`,
+    `<line class="${cls(3)}" x1="80" y1="62" x2="98" y2="80"/>`,
+    `<line class="${cls(4)}" x1="80" y1="92" x2="66" y2="118"/>`,
+    `<line class="${cls(5)}" x1="80" y1="92" x2="94" y2="118"/>`];
   return `<svg viewBox="0 0 120 140" aria-hidden="true">
     <line x1="10" y1="134" x2="70" y2="134"/><line x1="30" y1="134" x2="30" y2="10"/><line x1="30" y1="10" x2="80" y2="10"/><line x1="30" y1="30" x2="50" y2="10"/>
-    <line class="rope" x1="80" y1="10" x2="80" y2="31"/>${parts.join("")}</svg>`;
+    <g class="${steps>0&&!(S.result&&S.result.hanged)?"sway":""}"><line class="rope" x1="80" y1="10" x2="80" y2="31"/>${parts.join("")}</g></svg>`;
 }
+const lives=()=>`<div class="lives" aria-label="Kalan can">${Array.from({length:maxMiss()},(_,i)=>`<i class="${i<maxMiss()-S.misses?"":"off"}"></i>`).join("")}</div>`;
+let known=[];
 function wordRow(){
-  return `<div class="word" aria-label="Kelime">${S.masked.map(c=>c===" "?`<span class="slot gap"></span>`:`<span class="slot ${c?"on":""} ${S.result&&S.result.hanged&&c&&!S.guessed.includes(c)?"miss":""}">${c?esc(c):""}</span>`).join("")}</div>`;
+  return `<div class="word" aria-label="Kelime">${S.masked.map((c,i)=>c===" "?`<span class="slot gap"></span>`:`<span class="slot ${c?"on":""} ${S.result&&S.result.hanged&&c&&!S.guessed.includes(c)?"miss":""}" ${c&&known[i]?'style="animation:none"':""}>${c?esc(c):""}</span>`).join("")}</div>`;
 }
 function viewSet(){
   const mine=S.setter===myId;
@@ -423,7 +380,7 @@ function viewSet(){
     <h2>${mine?"Kelimeyi sen tutuyorsun":esc(nameOf(S.setter))+" kelime yazıyor…"}</h2>
     ${mine?`
     <div class="field"><label for="word">Kelime</label><input type="text" id="word" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Sadece harf, en az 3"></div>
-    <div class="field"><label for="hint">İpucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>
+    ${lvl(S.settings).hint?`<div class="field"><label for="hint">İpucu (isteğe bağlı)</label><input type="text" id="hint" maxlength="30" autocomplete="off" placeholder="Örn. Hayvan"></div>`:`<p class="sub">Bu zorlukta ipucu verilmez.</p>`}
     ${formError?`<p class="err">${esc(formError)}</p>`:""}
     <button class="btn" data-act="word">Kelimeyi gönder</button>
     <p class="sub">Ekranını kimseye gösterme. Kelime asılırsa 40 puan senin.</p>`
@@ -439,7 +396,7 @@ function viewPlay(){
       <div class="grow"><p class="sub">Tur ${S.round} / ${S.settings.rounds}</p>
         <h2>${setter?"Senin kelimen":"Kelimeyi "+esc(nameOf(S.setter))+" tuttu"}</h2>
         ${S.hint?`<p>İpucu: <b>${esc(S.hint)}</b></p>`:""}
-        <p class="misses sub">Yanlış: ${S.misses} / ${MAX_MISS}</p></div>
+        ${lives()}<p class="misses sub">Kalan can: ${maxMiss()-S.misses}</p></div>
     </div>
     ${wordRow()}
     ${setter&&mySecret?`<p class="center sub">Kelime: <span class="secret">${esc(mySecret)}</span></p>`:""}
@@ -447,7 +404,7 @@ function viewPlay(){
   </section>
   ${setter?"":`<section class="card">
     <div class="keys">${ALPHA.map(l=>{const g=S.guessed.includes(l),hit=g&&S.masked.includes(l);return `<button class="key ${g?(hit?"hit":"miss"):""}" data-act="g" data-l="${l}" ${g||!myTurn?"disabled":""}>${l}</button>`}).join("")}</div>
-    <div class="row"><div class="grow"><input type="text" id="wguess" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Kelimenin tamamını yaz" ${myTurn?"":"disabled"}></div><button class="btn ghost small" data-act="w" ${myTurn?"":"disabled"}>Tahmin et</button></div>
+    <div class="row"><div class="grow"><input type="text" id="wguess" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Kelimenin tamamını yaz" ${myTurn?"":"disabled"}></div><button class="btn gold small" data-act="w" ${myTurn?"":"disabled"}>Tahmin et</button></div>
     <p class="sub">${lw?esc(nameOf(lw.pid))+" \""+esc(lw.w)+"\" dedi, tutmadı. ":""}Yanlış kelime tahmini bir yanlış sayılır ve sıra geçer.</p>
   </section>`}
   <section class="card"><h2>Oyuncular</h2>${playerList()}</section>`;
@@ -465,16 +422,16 @@ function viewReveal(){
     ${S.hint?`<p class="center sub">İpucu: ${esc(S.hint)}</p>`:""}
   </section>
   <section class="card"><h2>Puan durumu</h2>
-    <table class="rank"><tbody>${board.map((p,i)=>`<tr class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
+    <table class="rank"><tbody>${board.map((p,i)=>`<tr style="--i:${i}" class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
   </section>
   ${isHost?`<button class="btn" data-act="next">${final?"Sonuçları göster":"Sonraki tur"}</button>`:`<p class="sub center">Oda sahibi devam ettirecek…</p>`}`;
 }
 function viewFinal(){
   const board=S.players.slice().sort((a,b)=>b.score-a.score), top=board[0];
   return topBar()+`
-  <section class="card sheet center"><p class="sub">Oyun bitti</p><h1>${top?esc(top.name):""} kazandı</h1><p class="sub">${top?top.score:0} puan</p></section>
+  <section class="card sheet center"><div class="trophy" aria-hidden="true">🏆</div><p class="sub">Oyun bitti</p><h1 class="winner">${top?esc(top.name):""}</h1><p class="sub">${top?top.score:0} puanla kazandı</p></section>
   <section class="card"><h2>Sıralama</h2>
-    <table class="rank"><tbody>${board.map((p,i)=>`<tr class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
+    <table class="rank"><tbody>${board.map((p,i)=>`<tr style="--i:${i}" class="${p.id===myId?"me":""}"><td>${i+1}</td><td>${esc(p.name)}</td><td class="pts">${p.score}</td></tr>`).join("")}</tbody></table>
   </section>
   ${isHost?`<button class="btn" data-act="again">Yeni oyun</button>`:`<p class="sub center">Oda sahibi yeni oyun başlatabilir.</p>`}`;
 }
@@ -493,10 +450,16 @@ function render(){
     const act=document.activeElement, keep=act&&act.id?{id:act.id,v:act.value,s:act.selectionStart}:null;
     const vals={};for(const el of app.querySelectorAll("input[type=text]"))if(el.id)vals[el.id]=el.value;
     const screen=S?S.phase+"#"+S.round:"home", samePhase=app.dataset.screen===screen;
-    app.innerHTML=html; lastHTML=html; app.dataset.screen=screen;
+    app.classList.toggle("still",samePhase); app.innerHTML=html; lastHTML=html; app.dataset.screen=screen;
     if(samePhase)for(const id in vals){const el=document.getElementById(id);if(el)el.value=vals[id]}
     if(keep){const el=document.getElementById(keep.id);if(el&&!el.disabled){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
     if(!samePhase)window.scrollTo(0,0);
+    if(S&&window.FX){
+      if(S.phase==="play"&&S.misses>shownMiss&&samePhase)FX.shake(document.querySelector(".gallows"));
+      if(S.phase==="reveal"&&S.result&&!S.result.hanged&&!samePhase)FX.confetti();
+      if(S.phase==="final"&&!samePhase)FX.confetti();
+    }
+    if(S){shownMiss=S.phase==="play"||S.phase==="reveal"?S.misses:0; known=(S.masked||[]).map(c=>!!c)}
   }
 }
 function tick(){
@@ -541,7 +504,13 @@ document.addEventListener("click",ev=>{
     const saved=ls.get("host",null);if(!saved||!codeOk(saved.code))return;
     G=saved;delete G.saved;G.players.forEach(p=>p.online=p.id===myId);seen=new Map();everConnected=false;openHost(true);
   }
-  else if(a==="leave")leave("");
+  else if(a==="leave"){menuOpen=false;leave("")}
+  else if(a==="menu"){menuOpen=true;render()}
+  else if(a==="menu-close"){if(ev.target.closest("[data-stop]")&&!ev.target.closest('[data-act="menu-close"].btn'))return;menuOpen=false;render()}
+  else if(a==="copycode"){
+    const msg=document.getElementById("sharemsg"),done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
+    if(navigator.clipboard)navigator.clipboard.writeText(S.code).then(()=>done("Kod kopyalandı."),()=>done(S.code));else done(S.code);
+  }
   else if(a==="share"){
     const url=joinLink(),msg=document.getElementById("sharemsg");
     const done=t=>{if(msg){msg.textContent=t;msg.hidden=false}};
@@ -550,7 +519,7 @@ document.addEventListener("click",ev=>{
     else done(url);
   }
   else if(a==="word"){
-    const w=up(document.getElementById("word").value), h=(document.getElementById("hint").value||"").trim();
+    const w=up(document.getElementById("word").value), he=document.getElementById("hint"), h=he?(he.value||"").trim():"";
     if(!validWord(w)){formError="Kelime sadece harflerden oluşmalı, en az 3 harf.";render();return}
     mySecret=w; formError=""; send({t:"word",word:w,hint:h}); render();
   }
@@ -558,6 +527,7 @@ document.addEventListener("click",ev=>{
   else if(a==="w"){const el=document.getElementById("wguess"),w=up(el.value);if(!w)return;el.value="";send({t:"w",w})}
   else if(!isHost||!G)return;
   else if(a==="mode"){G.settings.mode=b.dataset.mode;setSettings()}
+  else if(a==="level"){G.settings.level=b.dataset.level;setSettings()}
   else if(a==="start"){for(const p of G.players)p.score=0;G.round=0;beginRound()}
   else if(a==="next"){if(G.phase==="reveal"){if(G.round>=G.settings.rounds){G.phase="final";sync()}else beginRound()}}
   else if(a==="again")newGame();
@@ -570,7 +540,7 @@ document.addEventListener("keydown",ev=>{
   if(ev.key!=="Enter")return;const el=ev.target;
   const click=sel=>{ev.preventDefault();const b=document.querySelector(sel);b&&b.click()};
   if(el.id==="code")click('[data-act="join"]');
-  else if(el.id==="word"){ev.preventDefault();document.getElementById("hint").focus()}
+  else if(el.id==="word"){ev.preventDefault();const h=document.getElementById("hint");if(h)h.focus();else click('[data-act="word"]')}
   else if(el.id==="hint")click('[data-act="word"]');
   else if(el.id==="wguess")click('[data-act="w"]');
 });
