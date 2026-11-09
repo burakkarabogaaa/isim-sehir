@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="../theme.css">
 <style>
 /* sayfaya özel: 3D sahne, skor şeridi, atış alanı */
-.stage{position:relative; border-radius:var(--r); overflow:hidden; background:#0c0e1c; box-shadow:var(--shadow); touch-action:none; -webkit-user-select:none; user-select:none}
+.stage{position:relative; border-radius:var(--r); overflow:hidden; background:radial-gradient(120% 90% at 50% 20%,#2b2f4a,#0b0e1c 70%); box-shadow:var(--shadow); touch-action:none; -webkit-user-select:none; user-select:none}
 .stage canvas{display:block; width:100%; height:auto}
 .hud{position:absolute; left:0; right:0; top:0; display:flex; justify-content:space-between; gap:8px; padding:10px 12px; pointer-events:none; color:#fff7e6}
 .hud .who{font:800 .95rem/1.2 var(--body); text-shadow:0 1px 2px rgba(0,0,0,.6)}
@@ -303,119 +303,76 @@ function leave(msg){
 function send(m){ if(isHost)hostHandle(m,myId); else pubMsg("in",Object.assign({pid:myId},m),1) }
 
 /* ---------- 3D sahne ---------- */
-/* Gerçek kamera: sağ-alt çaprazdan tahtaya bakar, böylece saplanan oklar yandan görünür. Tahta her karede
-   perspektifle çizilir (poligonlar), oklar silindir+kanat olarak projekte edilir. Nişan: parmağın değdiği noktadan
-   geçen ışın tahta düzlemiyle kesişir. */
-const CAM={pos:{x:980,y:-620,z:260},target:{x:0,y:20,z:THROW_Z},F:1,zoom:1};
-const scene={cv:null,ctx:null,W:0,H:0,cx:0,cy:0,flying:null,landed:[],aim:null,drag:null,shake:0,basis:null,power:null,swayT:0};
-const v3=(x,y,z)=>({x,y,z}), sub=(a,b)=>v3(a.x-b.x,a.y-b.y,a.z-b.z), add=(a,b)=>v3(a.x+b.x,a.y+b.y,a.z+b.z), mul=(a,k)=>v3(a.x*k,a.y*k,a.z*k);
-const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z, cross=(a,b)=>v3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x), len=a=>Math.hypot(a.x,a.y,a.z), norm=a=>mul(a,1/(len(a)||1));
-function camBasis(){ const f=norm(sub(CAM.target,CAM.pos)), r=norm(cross(v3(0,1,0),f)), u=cross(f,r); scene.basis={f,r,u} }
-function proj(p){ const B=scene.basis, d=sub(p,CAM.pos), zc=dot(d,B.f), F=CAM.F*CAM.zoom; const s=F/Math.max(1,zc); return{x:scene.cx+dot(d,B.r)*s,y:scene.cy-dot(d,B.u)*s,s,z:zc} }
-function unprojectToBoard(px,py){ const B=scene.basis, F=CAM.F*CAM.zoom; const d=add(add(mul(B.r,(px-scene.cx)/F),mul(B.u,(scene.cy-py)/F)),B.f); const t=(THROW_Z-CAM.pos.z)/d.z; const p=add(CAM.pos,mul(d,t)); return{x:p.x,y:p.y} }
-const onBoard=(x,y)=>v3(x,y,THROW_Z);
-function poly(g,pts,fill,stroke,lw){ g.beginPath(); pts.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.closePath(); if(fill){g.fillStyle=fill;g.fill()} if(stroke){g.strokeStyle=stroke;g.lineWidth=lw||1;g.stroke()} }
-function arcPts(r0,r1,a0,a1,n){ const out=[]; for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;out.push(proj(onBoard(Math.sin(a)*r1,Math.cos(a)*r1)))} for(let i=n;i>=0;i--){const a=a0+(a1-a0)*i/n;out.push(proj(onBoard(Math.sin(a)*r0,Math.cos(a)*r0)))} return out }
-function circlePts(r,n){ const out=[]; for(let i=0;i<n;i++){const a=i/n*Math.PI*2;out.push(proj(onBoard(Math.sin(a)*r,Math.cos(a)*r)))} return out }
-function drawBoard(g){
-  // duvar, ışık, surround, gölge
-  const c=proj(onBoard(0,0));
-  const sh=circlePts(R.board*1.3,40).map(p=>({x:p.x+c.s*18,y:p.y+c.s*26}));
-  poly(g,sh,"rgba(0,0,0,.45)");
-  g.save(); g.filter="blur(6px)"; poly(g,sh,"rgba(0,0,0,.35)"); g.restore();
-  poly(g,circlePts(R.board*1.3,48),"#111214");
-  poly(g,circlePts(R.board*1.3,48),null,"rgba(255,255,255,.08)",1);
-  // yüzey (sisal) ve dilimler
+const scene={cv:null,ctx:null,W:0,H:0,f:0,cx:0,cy:0,board:null,flying:null,landed:[],aim:null,drag:null,shake:0,toasts:[]};
+function proj(x,y,z){ const s=scene.f/z; return{x:scene.cx+x*s,y:scene.cy-y*s,s} }
+function buildBoard(px){
+  const c=document.createElement("canvas"); c.width=c.height=px; const g=c.getContext("2d"); const k=px/2/R.board*0.86, cx=px/2, cy=px/2;
+  const ring=(r0,r1,i,col)=>{const a0=(i-0.5)*Math.PI/10-Math.PI/2,a1=(i+0.5)*Math.PI/10-Math.PI/2;g.beginPath();g.arc(cx,cy,r1*k,a0,a1);g.arc(cx,cy,r0*k,a1,a0,true);g.closePath();g.fillStyle=col;g.fill()};
+  g.fillStyle="#141414";g.beginPath();g.arc(cx,cy,px/2,0,7);g.fill();
   for(let i=0;i<20;i++){
-    const a0=(i-0.5)*Math.PI/10, a1=(i+0.5)*Math.PI/10, dark=i%2===0;
-    poly(g,arcPts(R.outer,R.tIn,a0,a1,4),dark?"#1c1c1e":"#e9dfc4");
-    poly(g,arcPts(R.tIn,R.tOut,a0,a1,4),dark?"#c6342a":"#1f8a4c");
-    poly(g,arcPts(R.tOut,R.dIn,a0,a1,5),dark?"#1c1c1e":"#e9dfc4");
-    poly(g,arcPts(R.dIn,R.dOut,a0,a1,5),dark?"#c6342a":"#1f8a4c");
+    const dark=i%2===0;
+    ring(R.outer,R.tIn,i,dark?"#1b1b1b":"#efe6cf"); ring(R.tIn,R.tOut,i,dark?"#c8352b":"#1f8a4c");
+    ring(R.tOut,R.dIn,i,dark?"#1b1b1b":"#efe6cf"); ring(R.dIn,R.dOut,i,dark?"#c8352b":"#1f8a4c");
   }
-  poly(g,circlePts(R.outer,32),"#1f8a4c"); poly(g,circlePts(R.bull,24),"#c6342a");
-  // teller
-  g.strokeStyle="rgba(200,205,215,.9)"; g.lineWidth=Math.max(1,c.s*1.4);
-  [R.outer,R.tIn,R.tOut,R.dIn,R.dOut].forEach(r=>{const pts=circlePts(r,60);g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.closePath();g.stroke()});
-  for(let i=0;i<20;i++){const a=(i-0.5)*Math.PI/10;const p0=proj(onBoard(Math.sin(a)*R.outer,Math.cos(a)*R.outer)),p1=proj(onBoard(Math.sin(a)*R.dOut,Math.cos(a)*R.dOut));g.beginPath();g.moveTo(p0.x,p0.y);g.lineTo(p1.x,p1.y);g.stroke()}
-  // sayılar
-  g.fillStyle="#f3efe6"; g.textAlign="center"; g.textBaseline="middle";
-  for(let i=0;i<20;i++){const a=i*Math.PI/10,p=proj(onBoard(Math.sin(a)*(R.dOut+28),Math.cos(a)*(R.dOut+28)));g.font=`700 ${Math.max(9,p.s*24)}px Manrope,system-ui,sans-serif`;g.fillText(SEGS[i],p.x,p.y)}
-  // ışık parlaması
-  const grd=g.createRadialGradient(c.x-c.s*60,c.y-c.s*90,c.s*20,c.x,c.y,c.s*330); grd.addColorStop(0,"rgba(255,240,200,.14)"); grd.addColorStop(1,"rgba(0,0,0,0)"); g.fillStyle=grd; poly(g,circlePts(R.board*1.3,48)); g.fill();
+  g.beginPath();g.arc(cx,cy,R.outer*k,0,7);g.fillStyle="#1f8a4c";g.fill();
+  g.beginPath();g.arc(cx,cy,R.bull*k,0,7);g.fillStyle="#c8352b";g.fill();
+  g.strokeStyle="#9aa0a6";g.lineWidth=px*0.0025;
+  for(let i=0;i<20;i++){const a=(i-0.5)*Math.PI/10-Math.PI/2;g.beginPath();g.moveTo(cx+Math.cos(a)*R.outer*k,cy+Math.sin(a)*R.outer*k);g.lineTo(cx+Math.cos(a)*R.dOut*k,cy+Math.sin(a)*R.dOut*k);g.stroke()}
+  [R.outer,R.tIn,R.tOut,R.dIn,R.dOut].forEach(r=>{g.beginPath();g.arc(cx,cy,r*k,0,7);g.stroke()});
+  g.fillStyle="#f3efe6";g.font=`700 ${px*0.052}px Manrope,system-ui,sans-serif`;g.textAlign="center";g.textBaseline="middle";
+  for(let i=0;i<20;i++){const a=i*Math.PI/10-Math.PI/2,r=(R.dOut+26)*k;g.fillText(SEGS[i],cx+Math.cos(a)*r,cy+Math.sin(a)*r)}
+  return c;
 }
-/* ok: p uç noktası (3B), dir birim yön (uçtan kuyruğa) */
-function drawDart(g,p,dir,alpha){
-  const B=scene.basis; let side=cross(dir,v3(0,1,0)); if(len(side)<0.15)side=B.r; side=norm(side); const upv=norm(cross(side,dir));
-  const at=t=>add(p,mul(dir,t));
-  const segs=[[0,42,1.6,1.6,"#d9dde6","#8a909c"],[42,112,4.2,5.4,"#3a4063","#161a2e"],[112,170,2.6,2.6,"#e3b23c","#9a7420"]];   // [t0,t1,r0,r1,açık,koyu] mm (görünürlük için büyütülmüş)
-  g.globalAlpha=alpha==null?1:alpha;
-  for(const [t0,t1,r0,r1,c1,c2] of segs){
-    const a=at(t0),b=at(t1);
-    const pts=[proj(add(a,mul(side,r0))),proj(add(b,mul(side,r1))),proj(add(b,mul(side,-r1))),proj(add(a,mul(side,-r0)))];
-    const gr=g.createLinearGradient(pts[0].x,pts[0].y,pts[3].x,pts[3].y); gr.addColorStop(0,c1); gr.addColorStop(.5,c1); gr.addColorStop(1,c2);
-    poly(g,pts,gr);
-  }
-  // uç parıltısı
-  const tip=proj(p); g.fillStyle="#f6f7fb"; g.beginPath(); g.arc(tip.x,tip.y,Math.max(.8,tip.s*1.2),0,7); g.fill();
-  // kanatlar: iki çapraz yaprak (4 yüz)
-  const fb=at(168), fe=at(215), w=26;
-  const leaf=(dirv,col)=>{const pts=[proj(fb),proj(add(fe,mul(dirv,w*.2))),proj(add(fe,mul(dirv,w))),proj(add(at(188),mul(dirv,w*1.05)))];poly(g,pts,col)};
-  const shade=(v)=>{const k=.75+.25*Math.max(0,dot(v,norm(v3(-.3,.8,-.5))));return k};
-  leaf(upv,`rgba(227,178,60,${.95*shade(upv)})`); leaf(mul(upv,-1),`rgba(227,178,60,${.95*shade(mul(upv,-1))})`);
-  leaf(side,`rgba(243,239,230,${.9*shade(side)})`); leaf(mul(side,-1),`rgba(243,239,230,${.9*shade(mul(side,-1))})`);
-  g.globalAlpha=1;
-}
-function flightPos(f,e){ // e: 0..1
-  const p=add(mul(f.from,1-e),mul(f.to,e)); p.y+=Math.sin(Math.PI*e)*f.arc; return p;
+function drawDart(g,p,dir,scaleHint){
+  // p: 3B uç noktası, dir: birim yön (uçtan kuyruğa). 130mm gövde + kanat.
+  const pts=[0,22,60,105,130].map(t=>proj(p.x+dir.x*t,p.y+dir.y*t,p.z+dir.z*t));
+  const s=pts[0].s;
+  g.lineCap="round";
+  g.strokeStyle="#cfd3dc";g.lineWidth=Math.max(1,1.6*s*1000/1000*3);g.beginPath();g.moveTo(pts[0].x,pts[0].y);g.lineTo(pts[1].x,pts[1].y);g.stroke();     // uç
+  g.strokeStyle="#2a2f48";g.lineWidth=Math.max(2,7*s*3);g.beginPath();g.moveTo(pts[1].x,pts[1].y);g.lineTo(pts[2].x,pts[2].y);g.stroke();           // gövde
+  g.strokeStyle="#e3b23c";g.lineWidth=Math.max(1.5,4*s*3);g.beginPath();g.moveTo(pts[2].x,pts[2].y);g.lineTo(pts[3].x,pts[3].y);g.stroke();         // şaft
+  // kanatlar: iki çapraz yaprak
+  const q=proj(p.x+dir.x*130,p.y+dir.y*130,p.z+dir.z*130), w=18*q.s*3;
+  g.fillStyle="rgba(227,178,60,.92)";
+  g.beginPath();g.moveTo(pts[3].x,pts[3].y);g.lineTo(q.x-w,q.y-w*.6);g.lineTo(q.x,q.y);g.lineTo(q.x+w,q.y-w*.6);g.closePath();g.fill();
+  g.fillStyle="rgba(243,239,230,.9)";
+  g.beginPath();g.moveTo(pts[3].x,pts[3].y);g.lineTo(q.x-w*.35,q.y+w*.9);g.lineTo(q.x,q.y);g.lineTo(q.x+w*.35,q.y+w*.9);g.closePath();g.fill();
 }
 function drawScene(now){
-  const sc=scene,g=sc.ctx; if(!g)return;
-  const W=sc.W,H=sc.H;
-  // yumuşak zoom
-  const zt=sc.drag?1.18:sc.flying?1.06:1; CAM.zoom+=(zt-CAM.zoom)*.12;
-  g.clearRect(0,0,W,H);
-  const shx=sc.shake>0?(Math.random()-.5)*sc.shake:0, shy=sc.shake>0?(Math.random()-.5)*sc.shake:0; sc.shake*=0.86; if(sc.shake<.3)sc.shake=0;
+  const sc=scene, g=sc.ctx; if(!g)return;
+  const W=sc.W,H=sc.H; g.clearRect(0,0,W,H);
+  const shx=sc.shake>0?(Math.random()-.5)*sc.shake:0, shy=sc.shake>0?(Math.random()-.5)*sc.shake:0; sc.shake*=0.85; if(sc.shake<.3)sc.shake=0;
   g.save(); g.translate(shx,shy);
-  // duvar
-  const wall=g.createLinearGradient(0,0,0,H); wall.addColorStop(0,"#2a2d45"); wall.addColorStop(1,"#0c0e1c"); g.fillStyle=wall; g.fillRect(-20,-20,W+40,H+40);
-  const spot=g.createRadialGradient(W*.45,H*.25,20,W*.45,H*.35,W*.9); spot.addColorStop(0,"rgba(255,226,160,.22)"); spot.addColorStop(1,"rgba(0,0,0,0)"); g.fillStyle=spot; g.fillRect(0,0,W,H);
-  drawBoard(g);
-  // saplı oklar (uzaklığa göre sırala: önce uzaktakiler)
-  const landed=sc.landed.map(d=>{const p=onBoard(d.x,d.y); const toward=norm(sub(add(CAM.pos,v3(-700,-150,0)),p)); const dir=norm(add(toward,v3(0,-0.22,0))); return{p,dir,z:proj(p).z}}).sort((a,b)=>b.z-a.z);
-  for(const d of landed){ // tahtadaki gölge
-    const sp=proj(onBoard(d.p.x+14,d.p.y-16)); g.fillStyle="rgba(0,0,0,.35)"; g.beginPath(); g.ellipse(sp.x,sp.y,sp.s*22,sp.s*6,-.6,0,7); g.fill();
-    drawDart(g,d.p,d.dir);
-  }
-  // uçan ok
+  // duvar ışığı ve gölge
+  const bp=proj(0,0,THROW_Z), br=R.board*bp.s*1.22;
+  const grd=g.createRadialGradient(bp.x,bp.y-br*.4,br*.2,bp.x,bp.y,br*2.2); grd.addColorStop(0,"rgba(255,230,170,.16)"); grd.addColorStop(1,"rgba(0,0,0,0)"); g.fillStyle=grd; g.fillRect(0,0,W,H);
+  g.save(); g.shadowColor="rgba(0,0,0,.6)"; g.shadowBlur=br*.25; g.shadowOffsetY=br*.06; g.fillStyle="#0a0a0a"; g.beginPath(); g.arc(bp.x,bp.y,br,0,7); g.fill(); g.restore();
+  g.drawImage(sc.board,bp.x-br,bp.y-br,br*2,br*2);
+  // saplı dartlar
+  for(const d of sc.landed){ const dir={x:-d.x*0.0009,y:0.32-d.y*0.0006,z:-0.9}; const n=Math.hypot(dir.x,dir.y,dir.z); drawDart(g,{x:d.x,y:d.y,z:THROW_Z-2},{x:dir.x/n,y:dir.y/n,z:dir.z/n}) }
+  // uçan dart
   const f=sc.flying;
   if(f){
-    const t=Math.min(1,(now-f.t0)/f.dur), e=1-Math.pow(1-t,1.35);            // başta hızlı, tahtaya yaklaşırken yavaş görünüm
-    const p=flightPos(f,e), p2=flightPos(f,Math.min(1,e+.01)); let dir=norm(sub(p,p2));
-    if(e>.55){const sp=proj(onBoard(f.to.x+14*(e-.55)*2,f.to.y-16*(e-.55)*2)); g.fillStyle=`rgba(0,0,0,${(e-.55)*.7})`; g.beginPath(); g.ellipse(sp.x,sp.y,sp.s*22,sp.s*6,-.6,0,7); g.fill()}
-    // hareket izi
-    for(let k=1;k<=5;k++){const q=flightPos(f,Math.max(0,e-k*.035));drawDart(g,q,dir,.22/k)}
-    drawDart(g,p,dir);
-    if(t>=1){ sc.landed.push({x:f.to.x,y:f.to.y}); sc.shake=7; snd("thud"); const h=hit(f.to.x,f.to.y); toast(h.v?h.label:"Dışarı",h.v>=50||h.m===3); sc.flying=null; if(f.onDone)f.onDone() }
+    const t=Math.min(1,(now-f.t0)/f.dur), e=t;             // sabit hız, perspektif zaten yavaşlatır
+    const z=120+(THROW_Z-2-120)*e, x=f.from.x+(f.to.x-f.from.x)*e, y=f.from.y+(f.to.y-f.from.y)*e+Math.sin(Math.PI*e)*140;
+    const nx=f.from.x+(f.to.x-f.from.x)*Math.min(1,e+.02), ny=f.from.y+(f.to.y-f.from.y)*Math.min(1,e+.02)+Math.sin(Math.PI*Math.min(1,e+.02))*140, nz=120+(THROW_Z-2-120)*Math.min(1,e+.02);
+    let dir={x:x-nx,y:y-ny,z:z-nz}; const n=Math.hypot(dir.x,dir.y,dir.z)||1; dir={x:dir.x/n,y:dir.y/n,z:dir.z/n};
+    // gölge (tahtaya yaklaşırken)
+    if(e>.6){const sp=proj(x+18,y-18,THROW_Z-1); g.fillStyle=`rgba(0,0,0,${(e-.6)*.9})`; g.beginPath(); g.ellipse(sp.x,sp.y,10*sp.s*3,4*sp.s*3,0,0,7); g.fill()}
+    drawDart(g,{x,y,z},dir);
+    if(t>=1){ sc.landed.push({x:f.to.x,y:f.to.y}); sc.shake=6; snd("thud"); const h=hit(f.to.x,f.to.y); toast(h.v?h.label:"Dışarı",h.v>=50||h.m===3); sc.flying=null; if(f.onDone)f.onDone() }
   }
   // nişangâh
   if(sc.aim&&!f){
-    const a=proj(onBoard(sc.aim.x,sc.aim.y)), r=a.s*(8+sc.aim.spread);
-    g.strokeStyle="rgba(255,247,230,.95)"; g.lineWidth=1.6; g.setLineDash([5,4]); g.beginPath(); g.arc(a.x,a.y,r,0,7); g.stroke(); g.setLineDash([]);
-    g.fillStyle="rgba(255,226,138,.9)"; g.beginPath(); g.arc(a.x,a.y,2.2,0,7); g.fill();
-    g.beginPath(); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){g.moveTo(a.x+dx*(r+3),a.y+dy*(r+3));g.lineTo(a.x+dx*(r+10),a.y+dy*(r+10))} g.stroke();
+    const a=proj(sc.aim.x,sc.aim.y,THROW_Z-1), r=10+sc.aim.spread*a.s*3;
+    g.strokeStyle="rgba(255,247,230,.9)"; g.lineWidth=1.5; g.setLineDash([4,4]); g.beginPath(); g.arc(a.x,a.y,r,0,7); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.moveTo(a.x-r-6,a.y); g.lineTo(a.x-r+4,a.y); g.moveTo(a.x+r-4,a.y); g.lineTo(a.x+r+6,a.y); g.moveTo(a.x,a.y-r-6); g.lineTo(a.x,a.y-r+4); g.moveTo(a.x,a.y+r-4); g.lineTo(a.x,a.y+r+6); g.stroke();
   }
-  // elde ok: ekranın alt-orta kısmında, kameraya yakın
-  if(sc.drag&&!f){ const B=sc.basis; drawDart(g,handPos(0.8),norm(add(add(mul(B.f,-.7),mul(B.u,-.6)),mul(B.r,.25)))) }
-  // güç göstergesi
-  if(sc.power&&now-sc.power.t0<1400){
-    const a=1-Math.max(0,(now-sc.power.t0-800)/600); const x=W-26,y0=H*.3,h=H*.4;
-    g.globalAlpha=a; g.fillStyle="rgba(255,255,255,.15)"; g.fillRect(x,y0,8,h);
-    g.fillStyle="rgba(120,220,150,.5)"; g.fillRect(x,y0+h*(1-.78),8,h*(.78-.42));
-    g.fillStyle=sc.power.ok?"#7fe0b0":"#ff9a90"; const v=Math.min(1,sc.power.v); g.fillRect(x,y0+h*(1-v),8,h*v);
-    g.globalAlpha=1;
-  }
+  // elde tutulan dart
+  if(sc.drag&&!f){ const d=sc.drag; const hx=(d.cx-sc.cx)/sc.f*160, hy=-(d.cy-sc.cy)/sc.f*160; drawDart(g,{x:hx,y:hy-20,z:160},{x:0,y:-0.35,z:-0.94}) }
   g.restore();
+  // toasts
+  sc.toasts=sc.toasts.filter(t=>now-t.t0<1100);
 }
 function toast(txt,big){
   const st=document.querySelector(".stage"); if(!st)return;
@@ -423,57 +380,46 @@ function toast(txt,big){
 }
 let rafId=0;
 function loop(now){ drawScene(now); rafId=requestAnimationFrame(loop) }
-const SWAY={basit:0,orta:4,zor:8,pro:13};        // el titremesi genliği (mm)
 function mountStage(){
   const cv=document.getElementById("cv"); if(!cv||scene.cv===cv)return;
   scene.cv=cv; scene.ctx=cv.getContext("2d");
-  const W=Math.min(560,cv.parentElement.clientWidth||360), H=Math.round(W*1.12), d=Math.min(2,devicePixelRatio||1);
+  const W=Math.min(560,cv.parentElement.clientWidth||360), H=Math.round(W*1.18), d=Math.min(2,devicePixelRatio||1);
   cv.width=W*d; cv.height=H*d; cv.style.height=H+"px"; scene.ctx.setTransform(d,0,0,d,0,0);
-  scene.W=W; scene.H=H; scene.cx=W*0.5; scene.cy=H*0.47;
-  camBasis(); CAM.F=(W*0.40)*len(sub(CAM.target,CAM.pos))/R.board; CAM.zoom=1;
+  scene.W=W; scene.H=H; scene.cx=W/2; scene.cy=H*0.42; scene.f=(W*0.36)*THROW_Z/R.board;
+  if(!scene.board)scene.board=buildBoard(1024);
   scene.landed=(S&&S.darts||[]).map(d=>({x:d.x,y:d.y})); scene.flying=null; scene.aim=null; scene.drag=null;
-  const AIM_LIFT=55;                                     // nişangâh parmağın biraz üstünde dursun (mm)
-  const aimFrom=(px,py)=>{const b=unprojectToBoard(px,py); const sw=SWAY[(S.settings||{}).level]||0, t=performance.now()/1000;
-    return{x:Math.max(-260,Math.min(260,b.x+Math.sin(t*1.9)*sw)),y:Math.max(-260,Math.min(260,b.y+AIM_LIFT+Math.sin(t*2.7+1)*sw*.8))}};
   cv.onpointerdown=e=>{
     if(!canThrow())return; cv.setPointerCapture(e.pointerId);
     const r=cv.getBoundingClientRect(); const px=e.clientX-r.left, py=e.clientY-r.top;
-    const a=aimFrom(px,py); scene.aim={x:a.x,y:a.y,spread:lvl(S.settings).human};
-    scene.drag={cx:px,cy:py,hist:[[px,py,performance.now(),a.x,a.y]]};
+    scene.drag={x0:px,y0:py,cx:px,cy:py,t0:performance.now(),hist:[[px,py,performance.now(),0,0]]};
+    scene.aim={x:0,y:0,spread:lvl(S.settings).human};
     e.preventDefault();
   };
   cv.onpointermove=e=>{
     const d=scene.drag; if(!d)return;
     const r=cv.getBoundingClientRect(); const px=e.clientX-r.left, py=e.clientY-r.top;
-    const a=aimFrom(px,py); scene.aim.x=a.x; scene.aim.y=a.y;
-    d.cx=px; d.cy=py; d.hist.push([px,py,performance.now(),a.x,a.y]); if(d.hist.length>24)d.hist.shift();
+    const k=R.board*2/scene.W*0.9;                       // piksel → mm (nişan hassasiyeti)
+    scene.aim.x=Math.max(-240,Math.min(240,scene.aim.x+(px-d.cx)*k));
+    scene.aim.y=Math.max(-240,Math.min(240,scene.aim.y-(py-d.cy)*k));
+    d.cx=px; d.cy=py; d.hist.push([px,py,performance.now(),scene.aim.x,scene.aim.y]); if(d.hist.length>24)d.hist.shift();
   };
   cv.onpointerup=cv.onpointercancel=e=>{
     const d=scene.drag; if(!d)return; scene.drag=null;
-    // Geriye doğru yürü: parmak hızlı yukarı gittiği sürece "fırlatma" hareketidir; onun başladığı nokta nişandır.
-    const h=d.hist, b=h[h.length-1];
-    let ai=h.length-1;
-    while(ai>0){const q=h[ai-1],w=h[ai]; const dt=Math.max(1,w[2]-q[2]); const vseg=(q[1]-w[1])/dt*1000; if(vseg>300&&b[2]-q[2]<400)ai--; else break}
-    if(ai>0&&h[ai-1][1]-h[ai][1]>10)ai--;                 // ilk hızlı örnek zaten yukarı sıçramışsa bir öncekini al
-    const a=h[ai], vb=h[Math.min(h.length-1,ai+1)], dt=Math.max(16,b[2]-vb[2]);
-    const vy=(vb[1]-b[1])/dt*1000, vx=(b[0]-vb[0])/dt*1000;
-    if(vy<450||ai===h.length-1){ scene.aim=null; return }  // fırlatma yok: oku indir
-    const aimPt={x:a[3],y:a[4]};
-    const L=lvl(S.settings);
-    const lo=1100,hi=2600, v=vy/3200;                       // güç penceresi
-    let dy=0; if(vy<lo)dy=-(lo-vy)*0.06; else if(vy>hi)dy=(vy-hi)*0.04;
-    const spread=L.human*(1+Math.abs(dy)/60);
-    const tx=aimPt.x+gauss()*spread+vx*0.01, ty=aimPt.y+gauss()*spread+dy;
-    scene.power={v,ok:vy>=lo&&vy<=hi,t0:performance.now()};
+    // Son ~90 ms: fırlatma hareketi. Ondan önceki konum: nişan. Böylece nişan almak ve fırlatmak birbirine karışmaz.
+    const h=d.hist, b=h[h.length-1], tEnd=b[2];
+    let ai=h.length-1; while(ai>0&&tEnd-h[ai][2]<90)ai--;
+    const a=h[ai], dt=Math.max(16,b[2]-a[2]); const vy=(a[1]-b[1])/dt*1000, vx=(b[0]-a[0])/dt*1000;   // px/s
+    if(vy<500){ scene.aim=null; toast("Yukarı fırlat",false); return }
+    const L=lvl(S.settings), ideal=1800, dev=Math.abs(vy-ideal)/ideal;      // güç penceresi: çok yavaş/çok hızlı saçılmayı artırır
+    const spread=L.human+dev*40;
+    const tx=a[3]+gauss()*spread+vx*0.012, ty=a[4]+gauss()*spread+(vy-ideal)*0.02;
     scene.aim=null; snd("throw");
-    scene.flying={from:handPos(0.8),to:onBoard(tx,ty),arc:40,t0:performance.now(),dur:620,onDone:()=>send({t:"throw",x:+tx.toFixed(1),y:+ty.toFixed(1)})};
+    const hx=(d.cx-scene.cx)/scene.f*160, hy=-(d.cy-scene.cy)/scene.f*160;
+    scene.flying={from:{x:hx,y:hy},to:{x:tx,y:ty},t0:performance.now(),dur:520,onDone:()=>send({t:"throw",x:+tx.toFixed(1),y:+ty.toFixed(1)})};
     localThrowPending=true;
   };
   if(!rafId)rafId=requestAnimationFrame(loop);
 }
-/* elin 3B konumu: ekranın alt kenarında, kameraya 600 mm uzakta (sx: -1 sol … 1 sağ) */
-function handPos(sx){ const B=scene.basis, zc=600, F=CAM.F*CAM.zoom; const uc=-(scene.H-scene.cy+20)/F*zc, rc=(scene.W*0.5*sx)/F*zc; return add(add(add(CAM.pos,mul(B.f,zc)),mul(B.u,uc)),mul(B.r,rc)) }
-function remoteFlight(d){ const from=handPos(-0.8); return{from,to:onBoard(d.x,d.y),arc:40,t0:performance.now(),dur:620} }
 let localThrowPending=false;
 const canThrow=()=>S&&S.phase==="play"&&S.turn===myId&&S.darts.length<3&&!scene.flying&&!localThrowPending;
 
@@ -539,7 +485,7 @@ function viewLobby(){
       <div class="seg">${[301,501,701].map(v=>`<button data-act="start-score" data-v="${v}" aria-pressed="${st.start===v}">${v}</button>`).join("")}</div>
       <h2>Zorluk</h2>
       <div class="seg">${LEVELS.map(([k,t])=>`<button data-act="level" data-level="${k}" aria-pressed="${st.level===k}">${t}</button>`).join("")}</div>
-      <p class="sub">${({basit:"Bilgisayar dağınık atar; elin titremez. Tek ile bitirilir.",orta:"Bilgisayar orta seviye; nişangâh hafif salınır.",zor:"Bilgisayar 60+ ortalama atar, nişangâh belirgin salınır. Çift ile bitirmek zorunlu.",pro:"Bilgisayar ~95 ortalama atar, nişangâh çok salınır. Çift ile başlamak ve bitirmek zorunlu."})[st.level]}</p>
+      <p class="sub">${({basit:"Bilgisayar dağınık atar, atışın tam gider. Tek ile bitirilir.",orta:"Bilgisayar orta seviye; eline hafif titreme eklenir.",zor:"Bilgisayar 60+ ortalama atar. Çift ile bitirmek zorunlu (D16, Bull…).",pro:"Bilgisayar ~95 ortalama atar. Çift ile başlamak ve bitirmek zorunlu, el daha çok titrer."})[st.level]}</p>
       <div class="row">
         <div class="field grow"><label for="legs">Leg sayısı</label><select id="legs">${[1,3,5,7].map(v=>`<option value="${v}" ${v===st.legs?"selected":""}>${v===1?"Tek leg":"En iyi "+v}</option>`).join("")}</select></div>
         <div class="field grow"><label>Bilgisayar</label><div class="seg"><button data-act="pc" data-v="1" aria-pressed="${!!st.pc}">Var</button><button data-act="pc" data-v="0" aria-pressed="${!st.pc}">Yok</button></div></div>
@@ -561,10 +507,10 @@ function viewPlay(){
   const need=cur.score<=170&&L.dblOut?checkout(cur.score):"";
   return `<div id="top">`+topBar()+`</div>
   <section class="stage" id="stage">
-    <canvas id="cv" width="360" height="432"></canvas>
+    <canvas id="cv" width="360" height="425"></canvas>
     <div class="hud"><div><div class="who">${me?"Sıra sende":"Sıra "+esc(nameOf(S.turn))+"'de"}</div><div class="need">${need?"Çıkış: "+need:cur.in===false?"Çift ile başla":"Kalan "+cur.score}</div></div>
       <div class="darts">${[0,1,2].map(i=>`<i class="${i<S.darts.length?"used":""}"></i>`).join("")}</div></div>
-    ${me&&S.darts.length<3?`<div class="hint">Tahtaya dokun: nişangâh parmağının biraz üstünde. Hızlıca yukarı fırlat.</div>`:""}
+    ${me&&S.darts.length<3?`<div class="hint">Bas, sürükleyerek nişan al, hızlıca yukarı fırlat</div>`:""}
   </section>
   <div id="below">${S.lastVisit?`<div class="banner ${S.lastVisit.bust?"":""}">${esc(nameOf(S.lastVisit.pid))}: ${S.lastVisit.bust?"BUST":S.lastVisit.pts+" puan"} <span class="sub" style="color:inherit;opacity:.8">(${S.lastVisit.darts.map(d=>d.label).join(" · ")})</span></div>`:""}
   <section class="card">${scoreboard()}
@@ -628,7 +574,7 @@ function render(){
     if(n>prevDarts&&!(S.turn===myId&&localThrowPending===false&&scene.landed.length>=n)){
       const d=S.darts[n-1];
       if(S.turn===myId){ localThrowPending=false; if(scene.landed.length<n)scene.landed.push({x:d.x,y:d.y}) }
-      else if(!scene.flying){ scene.flying=remoteFlight(d); snd("throw") }
+      else if(!scene.flying){ scene.flying={from:{x:(Math.random()-.5)*60,y:-120},to:{x:d.x,y:d.y},t0:performance.now(),dur:520}; snd("throw") }
       else scene.landed.push({x:d.x,y:d.y});
     }
     if(S.turn===myId&&prevTurn!==myId)snd("turn");
